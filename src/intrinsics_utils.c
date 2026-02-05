@@ -14,7 +14,8 @@
 
 
 //----------------------------------------------------------------------------
-// Functions for creating masks.
+// MMX/SSE*-compatible functions for creating integer, single, and double
+// masks.
 //----------------------------------------------------------------------------
 
 __m128i _mm_setmask_fromto_epi32(int from, int to)
@@ -68,6 +69,60 @@ __m128i _mm_setmask_fromto_epi32(int from, int to)
 	
 	return mask;
 }
+
+__m128i _mm_setmask_fromto_epi64(int from, int to)
+{
+	__m128i mask;
+	
+	if (from > to || from >= INT64_PER_M128_REG) {
+		mask = _mm_set1_epi64x(0);
+	} else {
+		switch (from) {
+			case 0:
+				switch(to) {
+					case 0:
+						mask = _mm_setr_epi64(_mm_cvtsi64_m64(INT64_ALLBITS), _mm_cvtsi64_m64(0));
+						break;
+					default:
+						mask = _mm_set1_epi64x(INT64_ALLBITS);
+				}
+
+				break;
+			case 1:
+				mask = _mm_setr_epi64(_mm_cvtsi64_m64(0), _mm_cvtsi64_m64(INT64_ALLBITS));
+				
+				break;
+			default:
+				mask = _mm_set1_epi64x(0);
+		}
+	}
+	
+	return mask;
+}
+
+__m128i _mm_set_mask_epi32(int cutoff)
+{
+	return _mm_setmask_fromto_epi32(0, cutoff - 1);
+}
+
+__m128i _mm_set_mask_epi64(int cutoff)
+{
+	return _mm_setmask_fromto_epi64(0, cutoff - 1);
+}
+
+__m128 _mm_set_mask_ps(int cutoff)
+{
+	return _mm_castsi128_ps(_mm_set_mask_epi32(cutoff));
+}
+
+__m128d _mm_set_mask_pd(int cutoff)
+{
+	return _mm_castsi128_pd(_mm_set_mask_epi64(cutoff));
+}
+
+//----------------------------------------------------------------------------
+// AVX*-compatible functions for creating integer, single, and double masks.
+//----------------------------------------------------------------------------
 
 __m256i _mm256_setmask_fromto_epi32(int from, int to)
 {
@@ -211,32 +266,6 @@ __m256i _mm256_setmask_fromto_epi32(int from, int to)
 	return mask;
 }
 
-__m128i _mm_setmask_fromto_epi64(int from, int to)
-{
-	__m128i mask;
-	
-	if (from > to || from >= INT64_PER_M128_REG) {
-		mask = _mm_set1_epi64x(INT64_ZERO);
-	} else {
-		switch (from) {
-			case 0:
-				switch(to) {
-					case 0:
-						mask = _mm_setr_epi64(_mm_cvtsi64_m64(INT64_ALLBITS), _mm_cvtsi64_m64(INT64_ALLBITS));
-						break;
-					default:
-						mask = _mm_set1_epi64x(INT64_ALLBITS);
-				}
-
-				break;
-			default:
-				mask = _mm_setr_epi64(_mm_cvtsi64_m64(0), _mm_cvtsi64_m64(INT64_ALLBITS));
-		}
-	}
-	
-	return mask;
-}
-
 __m256i _mm256_setmask_fromto_epi64(int from, int to)
 {
 	__m256i mask;
@@ -259,6 +288,7 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_set1_epi64x(INT64_ALLBITS);
 				}
+				
 				break;
 			case 1:
 				switch(to) {
@@ -271,6 +301,7 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_setr_epi64x(0, INT64_ALLBITS, INT64_ALLBITS, INT64_ALLBITS);
 				}
+				
 				break;
 			case 2:
 				switch(to) {
@@ -280,18 +311,18 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_setr_epi64x(0, 0, INT64_ALLBITS, INT64_ALLBITS);
 				}
+				
 				break;
 			case 3:
 				mask = _mm256_setr_epi64x(0, 0, 0, INT64_ALLBITS);
+				
+				break;
+			default:
+				mask = _mm256_set1_epi64x(0);
 		}
 	}
 	
 	return mask;
-}
-
-__m128i _mm_set_mask_epi32(int cutoff)
-{
-	return _mm_setmask_fromto_epi32(0, cutoff - 1);
 }
 
 __m256i _mm256_set_mask_epi32(int cutoff)
@@ -299,29 +330,14 @@ __m256i _mm256_set_mask_epi32(int cutoff)
 	return _mm256_setmask_fromto_epi32(0, cutoff - 1);
 }
 
-__m128i _mm_set_mask_epi64(int cutoff)
-{
-	return _mm_setmask_fromto_epi64(0, cutoff - 1);
-}
-
 __m256i _mm256_set_mask_epi64(int cutoff)
 {
 	return _mm256_setmask_fromto_epi64(0, cutoff - 1);
 }
 
-__m128 _mm_set_mask_ps(int cutoff)
-{
-	return _mm_castsi128_ps(_mm_set_mask_epi32(cutoff));
-}
-
 __m256 _mm256_set_mask_ps(int cutoff)
 {
 	return _mm256_castsi256_ps(_mm256_set_mask_epi32(cutoff));
-}
-
-__m128d _mm_set_mask_pd(int cutoff)
-{
-	return _mm_castsi128_pd(_mm_set_mask_epi64(cutoff));
 }
 
 __m256d _mm256_set_mask_pd(int cutoff)
@@ -664,62 +680,6 @@ int _mm256_count_nonzero_pd(__m256d a)
 }
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-// Mathematical helper functions.
-
-__m256 _mm256_ipow_ps(__m256 a, int n)
-{
-	__m256 res = _mm256_set1_ps(1.0f);
-	__m256 one = _mm256_set1_ps(1.0f);
-	int sign = n < 0 ? -1 : 1;
-	int N = sign * n;
-
-	for (int i = 0; i < n; i++) {
-		res = _mm256_mul_ps(res, a);
-	}
-	
-	if (sign < 0) {
-		res = _mm256_div_ps(one, res);
-	}
-	
-	return res;
-}
-
-__m256 _mm256_rpow_ps(__m256 x, int n)
-{
-	__m256 res = _mm256_set1_ps(1.0f);
-	
-	if (n > 0) {
-		res = _mm256_ipow_smrt_ps(x, n / 2);
-		res = _mm256_mul_ps(res, res);
-
-		if (n % 2 != 0) {
-			res = _mm256_mul_ps(x, res);
-		}
-	}
-	
-	return res;
-}
-
-float rpow(float x, int n)
-{
-	float res = 1;
-
-	if (n < 3) {
-		switch (n) {
-			case 0:
-				res = 1;
-				break;
-			case 1:
-				res = x;
-				break;
-			case 2:
-				res = x * x;
-		}
-	}
-}
-
-//----------------------------------------------------------------------------
 // Functions for computing statistics of registers.
 //----------------------------------------------------------------------------
 
@@ -828,7 +788,7 @@ double _mm256_register_min_pd(__m256d a)
 	const int imm8[3] = {
 		0x39, // [0, 1, 2, 3] -> [1, 2, 3, 0] = 0b 00 11 10 01 = 0b(0011)(1001) = 0x39
 		0x4e, // [0, 1, 2, 3] -> [2, 3, 0, 1] = 0b 01 00 11 10 = 0b(0100)(1110) = 0x4e
-		0x93 // [0, 1, 2, 3] -> [3, 0, 1, 2] = 0b 10 01 00 11 = 0b(1001)(0011) = 0x93
+		0x93  // [0, 1, 2, 3] -> [3, 0, 1, 2] = 0b 10 01 00 11 = 0b(1001)(0011) = 0x93
 	};
 	
 	int minidx = 0;
@@ -952,96 +912,6 @@ __m256i _mm256_leftperm_epi32(__m256i a, int nperms)
 }
 
 //----------------------------------------------------------------------------
-// Functions for computing the modulus of elements in registers.
-//----------------------------------------------------------------------------
-
-// Assumes b > 0.
-__m128i _mm_div_epi32(__m128i a, __m128i b)
-{
-	__m128i quotient;
-	
-	return quotient;
-}
-
-__m256i _mm256_div_epi32(__m256i a, __m256i b)
-{
-	__m256i quotient;
-
-	return quotient;
-}
-
-__m128i _mm_div_epi64(__m128i a, __m128i b)
-{
-	__m128i quotient;
-	
-	return quotient;
-}
-
-__m256i _mm256_div_epi64(__m256i a, __m256i b)
-{
-	__m256i quotient;
-	
-	return quotient;
-}
-
-__m128i _mm_rem_epi32(__m128i a, __m128i b)
-{
-	__m128i rem;
-
-	return rem;
-}
-
-__m256i _mm256_rem_epi32(__m256i a, __m256i b)
-{
-	__m256i rem;
-
-	return rem;
-}
-
-__m128i _mm_rem_epi64(__m128i a, __m128i b)
-{
-	__m128i rem;
-
-	return rem;
-}
-
-__m256i _mm256_rem_epi64(__m256i a, __m256i b)
-{
-	__m256i rem;
-
-	return rem;
-}
-
-__m128i _mm_mod_epi32(__m128i a, __m128i b)
-{
-	__m128i mod;
-	
-	return mod;
-}
-
-__m256i _mm256_mod_epi32(__m256i a, __m256i b)
-{
-	__m256i mod;
-	
-	return mod;
-}
-
-__m128i _mm_mod_epi64(__m128i a, __m128i b)
-{
-	__m128i mod;
-	
-	return mod;
-}
-
-__m256i _mm256_mod_epi64(__m256i a, __m256i b)
-{
-	__m256i mod;
-	
-	return mod;
-}
-
-
-//----------------------------------------------------------------------------
 // Helper routines for permuting
 //----------------------------------------------------------------------------
 
@@ -1105,7 +975,7 @@ void _mm256_copy1d_epi32(int *dst, const int *src, int n)
 		_mm256_maskstore_epi32(dst, mask, sreg);
 	}
 	
-	mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+	mask = _mm256_set1_epi32(INT32_ALLBITS);
 	
 	for (i = cutoff; i < n; i += INT32_PER_M256_REG) {
 		sreg = _mm256_maskload_epi32(src, mask);
@@ -1135,7 +1005,7 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 			_mm256_maskstore_epi32(kind + jdidx, mask, kreg);
 		}
 		
-		mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+		mask = _mm256_set1_epi32(INT32_PER_M256_REG);
 
 		for (i = icutoff; i < numi; i += INT32_PER_M256_REG) {
 			kreg = _mm256_maskload_epi32(iind + i, mask);
@@ -1158,7 +1028,7 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 		}
 	}
 	
-	mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+	mask = _mm256_set1_epi32(INT32_ALLBITS);
 
 	for (j = 0; j < numj; j++) {
 		jdidx = j * numi;
@@ -1188,8 +1058,6 @@ void _mm256_copy1d_ps(float *dst, const float *src, int n)
 		sreg = _mm256_maskload_ps(src, mask);
 		_mm256_maskstore_ps(dst, mask, sreg);
 	}
-	
-	mask = _mm256_set_mask_epi32(INT32_ALLBITS);
 	
 	for (i = cutoff; i < n; i += INT32_PER_M256_REG) {
 		sreg = _mm256_load_ps(src);
@@ -1225,7 +1093,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 			_mm256_maskstore_ps(dst + jdidx, mask, sreg);
 		}
 		
-		mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+		mask = _mm256_set1_epi32(INT32_ALLBITS);
 
 		for (i = icutoff; i < numi; i += INT32_PER_M256_REG) {
 			ireg = _mm256_maskload_epi32(iind + i, mask);
@@ -1254,7 +1122,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 		}
 	}
 	
-	mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+	mask = _mm256_set1_epi32(INT32_ALLBITS);
 
 	for (j = 0; j < numj; j++) {
 		jdidx = j * numi;
@@ -1278,7 +1146,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 void _mm256_print_register_epi32(__m256i a)
 {
 	int b[INT32_PER_M256_REG];
-	__m256i mask = _mm256_set_mask_epi32(INT32_ALLBITS);
+	__m256i mask = _mm256_set1_epi32(INT32_ALLBITS);
 	
 	_mm256_maskstore_epi32(b, mask, a);
 	printf("%d %d %d %d %d %d %d %d\n", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
@@ -1289,5 +1157,5 @@ void _mm256_print_register_ps(__m256 a)
 	float b[FLOAT_PER_M256_REG];
 	
 	_mm256_store_ps(b, a);
-	printf("%f %f %f %f %f %f %f %f\n", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
+	printf("%g %g %g %g %g %g %g %g\n", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
 }
