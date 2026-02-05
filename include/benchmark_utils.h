@@ -68,6 +68,5 @@ double sample_var(const double *, int, double);
 double sample_std(const double *, int, double);
 
 double compute_elapsed_time(struct timespec *, const struct timespec *, const struct timespec *);
-void benchmark(int, int, int, int, int, int, enum sequence_type, double, double, double, int);
 
 #endif
