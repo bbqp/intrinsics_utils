@@ -24,27 +24,24 @@
 #define INT64_HIGHBIT ((int64_t)0x8000000000000000)
 #define INT64_ALLBITS ((int64_t)0xFFFFFFFFFFFFFFFF)
 
-
 //----------------------------------------------------------------------------
 // Functions for creating masks.
 //----------------------------------------------------------------------------
 
+// SSE* functions.
 __m128i _mm_setmask_fromto_epi32(int, int);
-__m256i _mm256_setmask_fromto_epi32(int, int);
-
 __m128i _mm_setmask_fromto_epi64(int, int);
-__m256i _mm256_setmask_fromto_epi64(int, int);
-
 __m128i _mm_set_mask_epi32(int);
-__m256i _mm256_set_mask_epi32(int);
-
 __m128i _mm_set_mask_epi64(int);
-__m256i _mm256_set_mask_epi64(int);
-
 __m128 _mm_set_mask_ps(int);
-__m256 _mm256_set_mask_ps(int);
-
 __m128d _mm_set_mask_pd(int);
+
+// AVX2 functions.
+__m256i _mm256_setmask_fromto_epi32(int, int);
+__m256i _mm256_setmask_fromto_epi64(int, int);
+__m256i _mm256_set_mask_epi32(int);
+__m256i _mm256_set_mask_epi64(int);
+__m256 _mm256_set_mask_ps(int);
 __m256d _mm256_set_mask_pd(int);
 
 //----------------------------------------------------------------------------
@@ -67,19 +64,15 @@ double ddot_indexed2_avx2(const double *, const int *, const double *, const int
 
 float _mm_register_sum_ps(__m128);
 float _mm256_register_sum_ps(__m256);
+
 double _mm_register_sum_pd(__m128d);
 double _mm256_register_sum_pd(__m256d);
 
 int _mm_count_nonzero_ps(__m128);
 int _mm256_count_nonzero_ps(__m256);
+
 int _mm_count_nonzero_pd(__m128d);
 int _mm256_count_nonzero_pd(__m256d);
-
-//----------------------------------------------------------------------------
-// Mathematical helper functions.
-//----------------------------------------------------------------------------
-
-__m256 _mm256_ipow_ps(__m256, int);
 
 //----------------------------------------------------------------------------
 // Functions for computing statistics of registers.
@@ -96,26 +89,6 @@ __m256i _mm256_leftperm_epi64(__m256i, int);
 __m256i _mm256_maskleftperm_epi64(__m256i, __m256i);
 __m256i _mm256_leftshift_epi64(__m256i, int);
 __m256i _mm256_leftperm_epi32(__m256i, int);
-
-//----------------------------------------------------------------------------
-// Functions for computing division, remainders, and moduli of signed
-// integers.
-//----------------------------------------------------------------------------
-
-__m128i _mm_div_epi32(__m128i, __m128i);
-__m256i _mm256_div_epi32(__m256i, __m256i);
-__m128i _mm_div_epi64(__m128i, __m128i);
-__m256i _mm256_div_epi64(__m256i, __m256i);
-
-__m128i _mm_rem_epi32(__m128i, __m128i);
-__m256i _mm256_rem_epi32(__m256i, __m256i);
-__m128i _mm_rem_epi64(__m128i, __m128i);
-__m256i _mm256_rem_epi64(__m256i, __m256i);
-
-__m128i _mm_mod_epi32(__m128i, __m128i);
-__m256i _mm256_mod_epi32(__m256i, __m256i);
-__m128i _mm_mod_epi64(__m128i, __m128i);
-__m256i _mm256_mod_epi64(__m256i, __m256i);
 
 //----------------------------------------------------------------------------
 // Helper routines for permuting
