@@ -14,9 +14,9 @@ object_dir=obj
 bin_dir=bin
 lib_dir=lib
 
-validate_obj=grid.o intrinsics_utils.o transitionfunction.o validate.o
-benchmark_obj=grid.o intrinsics_utils.o transitionfunction.o benchmark.o benchmark_utils.o
-library_obj=grid.o intrinsics_utils.o transitionfunction.o
+validate_obj=intrinsics_utils.o validate.o
+benchmark_obj=intrinsics_utils.o benchmark.o benchmark_utils.o
+library_obj=intrinsics_utils.o
 
 validate_obj:=$(validate_obj:%=$(object_dir)/%)
 benchmark_obj:=$(benchmark_obj:%=$(object_dir)/%)
@@ -39,16 +39,14 @@ validate: $(validate_obj)
 benchmark: $(benchmark_obj)
 	$(cc) $^ -o $(bin_dir)/benchmark $(ldflags)
 
-smoothlife: $(library_obj)
-	$(cc) $^ -o $(lib_dir)/smoothlife.so $(so_ldflags)
+intrinsic_utils: $(library_obj)
+	$(cc) $^ -o $(lib_dir)/dynamic/libintrinsics_utils.so $(so_ldflags)
+	ar rcs $(lib_dir)/dynamic/libintrinsics_utils.a $^ 
 
 $(object_dir)/benchmark.o: $(src_dir)/benchmark.c
 	$(cc) -c $< $(ccflags) -o $@ 
 
 $(object_dir)/validate.o: $(src_dir)/validate.c
-	$(cc) -c $< $(ccflags) -o $@ 
-
-$(object_dir)/grid.o: $(src_dir)/grid.c $(include_dir)/grid.h
 	$(cc) -c $< $(ccflags) -o $@ 
 
 $(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/intrinsics_utils.h
@@ -57,11 +55,9 @@ $(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/i
 $(object_dir)/benchmark_utils.o: $(src_dir)/benchmark_utils.c $(include_dir)/benchmark_utils.h
 	$(cc) -c $< $(ccflags) -o $@ 
 
-$(object_dir)/transitionfunction.o: $(src_dir)/transitionfunction.c $(include_dir)/transitionfunction.h
-	$(cc) -c $< $(ccflags) -o $@ 
 
 clean:
-	rm -rf $(object_dir)/* $(bin_dir)/* $(lib_dir)/*
+	rm -rf $(object_dir)/* $(bin_dir)/* $(lib_dir)/static/* $(lib_dir)/dynamic/*
 
 run_validate:
 	$(bin_dir)/validate.exe
