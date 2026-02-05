@@ -349,7 +349,7 @@ __m256d _mm256_set_mask_pd(int cutoff)
 // Functions for setting values of arrays.
 //----------------------------------------------------------------------------
 
-void fset_avx2(float *x, int n, float value)
+void _mm256_sset_value(float *x, int n, float value)
 {
 	int k;
 	int cutoff = n % FLOAT_PER_M256_REG;
@@ -366,7 +366,7 @@ void fset_avx2(float *x, int n, float value)
 	}
 }
 
-void dset_avx2(double *x, int n, double value)
+void _mm256_dset_value(double *x, int n, double value)
 {
 	int k;
 	int cutoff = n % DOUBLE_PER_M256_REG;
@@ -624,6 +624,14 @@ float _mm_register_sum_ps(__m128 vreg)
 	return _mm_cvtss_f32(vreg);
 }
 
+double _mm_register_sum_pd(__m128d vreg)
+{
+	vreg = _mm_hadd_pd(vreg, vreg);
+	
+	return _mm_cvtsd_f64(vreg);
+}
+
+
 float _mm256_register_sum_ps(__m256 vreg)
 {
 	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
@@ -634,13 +642,6 @@ float _mm256_register_sum_ps(__m256 vreg)
 	vreg = _mm256_hadd_ps(vreg, vreg);
 
 	return _mm256_cvtss_f32(vreg);
-}
-
-float _mm_register_sum_pd(__m128d vreg)
-{
-	vreg = _mm_hadd_pd(vreg, vreg);
-	
-	return _mm_cvtsd_f64(vreg);
 }
 
 float _mm256_register_sum_pd(__m256d vreg)
@@ -658,16 +659,17 @@ int _mm_count_nonzero_ps(__m128 a)
 	return _popcnt32(cmask);
 }
 
-int _mm256_count_nonzero_ps(__m256 a)
+int _mm_count_nonzero_pd(__m128d a)
 {
-	int cmask = _mm256_movemask_ps(a);
+	int cmask = _mm_movemask_pd(a);
 	
 	return _popcnt32(cmask);
 }
 
-int _mm_count_nonzero_pd(__m128d a)
+
+int _mm256_count_nonzero_ps(__m256 a)
 {
-	int cmask = _mm_movemask_pd(a);
+	int cmask = _mm256_movemask_ps(a);
 	
 	return _popcnt32(cmask);
 }

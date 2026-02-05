@@ -24,6 +24,7 @@
 #define INT64_HIGHBIT ((int64_t)0x8000000000000000)
 #define INT64_ALLBITS ((int64_t)0xFFFFFFFFFFFFFFFF)
 
+
 //----------------------------------------------------------------------------
 // Functions for creating masks.
 //----------------------------------------------------------------------------
@@ -48,8 +49,8 @@ __m256d _mm256_set_mask_pd(int);
 // Functions for setting values of arrays.
 //----------------------------------------------------------------------------
 
-void fset_avx2(float *, int, float);
-void dset_avx2(double *, int, double);
+void _mm256_sset_value(float *, int, float);
+void _mm256_dset_value(double *, int, double);
 
 //----------------------------------------------------------------------------
 // Functions for computing sums of elements in registers.
@@ -58,20 +59,19 @@ void dset_avx2(double *, int, double);
 float fdot_avx2(const float *, const float *, int);
 float fdot_indexed_avx2(const float *, const int *, const float *, int);
 float fdot_indexed2_avx2(const float *, const int *, const float *, const int *, int);
+
 double ddot_avx2(const double *, const double *, int);
 double ddot_indexed_avx2(const double *, const int *, const double *, int);
 double ddot_indexed2_avx2(const double *, const int *, const double *, const int *, int);
 
 float _mm_register_sum_ps(__m128);
-float _mm256_register_sum_ps(__m256);
-
 double _mm_register_sum_pd(__m128d);
-double _mm256_register_sum_pd(__m256d);
-
 int _mm_count_nonzero_ps(__m128);
-int _mm256_count_nonzero_ps(__m256);
-
 int _mm_count_nonzero_pd(__m128d);
+
+float _mm256_register_sum_ps(__m256);
+double _mm256_register_sum_pd(__m256d);
+int _mm256_count_nonzero_ps(__m256);
 int _mm256_count_nonzero_pd(__m256d);
 
 //----------------------------------------------------------------------------
