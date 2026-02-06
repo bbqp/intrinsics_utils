@@ -618,8 +618,11 @@ double ddot_indexed2_avx2(const double *x, const int *xindices, const double *y,
 
 float _mm_register_sum_ps(__m128 vreg)
 {
+    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
+
 	vreg = _mm_hadd_ps(vreg, vreg);
-	vreg = _mm_hadd_ps(vreg, vreg);
+    vreg = _mm_permute_ps(vreg, imm8);
+    vreg = _mm_hadd_ps(vreg, vreg);
 	
 	return _mm_cvtss_f32(vreg);
 }
@@ -629,27 +632,6 @@ double _mm_register_sum_pd(__m128d vreg)
 	vreg = _mm_hadd_pd(vreg, vreg);
 	
 	return _mm_cvtsd_f64(vreg);
-}
-
-
-float _mm256_register_sum_ps(__m256 vreg)
-{
-	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
-
-	vreg = _mm256_hadd_ps(vreg, vreg);
-	vreg = _mm256_permutevar8x32_ps(vreg, idx);
-	vreg = _mm256_hadd_ps(vreg, vreg);
-	vreg = _mm256_hadd_ps(vreg, vreg);
-
-	return _mm256_cvtss_f32(vreg);
-}
-
-float _mm256_register_sum_pd(__m256d vreg)
-{
-	vreg = _mm256_hadd_pd(vreg, vreg);
-	vreg = _mm256_hadd_pd(vreg, vreg);
-	
-	return _mm256_cvtsd_f64(vreg);
 }
 
 int _mm_count_nonzero_ps(__m128 a)
@@ -666,6 +648,30 @@ int _mm_count_nonzero_pd(__m128d a)
 	return _popcnt32(cmask);
 }
 
+float _mm256_register_sum_ps(__m256 vreg)
+{
+	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
+
+	vreg = _mm256_hadd_ps(vreg, vreg);
+	vreg = _mm256_permutevar8x32_ps(vreg, idx);
+	vreg = _mm256_hadd_ps(vreg, vreg);
+	vreg = _mm256_hadd_ps(vreg, vreg);
+
+	return _mm256_cvtss_f32(vreg);
+}
+
+float _mm256_register_sum_pd(__m256d vreg)
+{
+
+    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
+
+	vreg = _mm256_hadd_pd(vreg, vreg);
+	vreg = _mm256_permute4x64_pd(vreg, imm8);
+	vreg = _mm256_hadd_pd(vreg, vreg);
+	
+	return _mm256_cvtsd_f64(vreg);
+}
+
 
 int _mm256_count_nonzero_ps(__m256 a)
 {
@@ -679,6 +685,67 @@ int _mm256_count_nonzero_pd(__m256d a)
 	int cmask = _mm256_movemask_pd(a);
 	
 	return _popcnt32(cmask);
+}
+
+float _mm512_register_sum_ps(__512 vreg)
+{
+    __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
+    __m256 vhi = _mm512_extractf32x8_ps(vreg, 1);
+	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
+
+	vlo = _mm256_hadd_ps(vlo, vlo);
+	vhi = _mm256_hadd_ps(vhi, vhi);
+
+	vlo = _mm256_permutevar8x32_ps(vlo, idx);
+	vhi = _mm256_permutevar8x32_ps(vhi, idx);
+
+    vlo = _mm256_hadd_ps(vlo, vlo);
+    vhi = _mm256_hadd_ps(vhi, vhi);
+
+    vlo = _mm256_hadd_ps(vlo, vlo);
+    vhi = _mm256_hadd_ps(vhi, vhi); 
+
+    return _mm256_cvtss_f32(vlo) + _mm256_cvtss_f32(vhi);
+}
+
+double _mm512_register_sum_pd(__m512d vreg)
+{
+    __m256 vlo = _mm512_extractf64x4_pd(vreg, 0);
+    __m256 vhi = _mm512_extractf64x4_pd(vreg, 1);
+
+    // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
+    const int imm8 = 0xd8;
+
+	vlo = _mm256_hadd_pd(vlo, vlo);
+	vhi = _mm256_hadd_pd(vhi, vhi);
+
+	vlo = _mm256_permute4x64_pd(vlo, imm8);
+	vhi = _mm256_permute4x64_pd(vhi, imm8);
+
+    vlo = _mm256_hadd_pd(vlo, vlo);
+    vhi = _mm256_hadd_pd(vhi, vhi);
+
+    return _mm256_cvtss_f32(vlo) + _mm256_cvtss_f32(vhi); 
+}
+
+int _mm512_count_nonzero_ps(__m512 vreg)
+{
+    __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
+    __m256 vhi = _mm512_extractf32x8_ps(vreg, 1);
+	int clo = _mm256_movemask_ps(clo);
+	int chi = _mm256_movemask_ps(chi);
+
+    return _popcnt32(clo) + _popcnt32(chi);
+}
+
+int _mm512_count_nonzero_pd(__m512d);
+{
+    __m256 vlo = _mm512_extractf64x4_pd(vreg, 0);
+    __m256 vhi = _mm512_extractf64x4_pd(vreg, 1);
+	int clo = _mm256_movemask_ps(clo);
+	int chi = _mm256_movemask_ps(chi);
+
+    return _popcnt32(clo) + _popcnt32(chi);
 }
 
 //----------------------------------------------------------------------------
