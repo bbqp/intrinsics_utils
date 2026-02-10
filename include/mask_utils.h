@@ -9,11 +9,15 @@
 #define INT64_PER_M128_REG DOUBLE_PER_M128_REG
 #define DOUBLE_PER_M256_REG 4
 #define INT64_PER_M256_REG DOUBLE_PER_M256_REG
+#define DOUBLE_PER_M512_REG 8
+#define INT64_PER_M512_REG DOUBLE_PER_M512_REG
 
 #define FLOAT_PER_M128_REG 4
 #define INT32_PER_M128_REG FLOAT_PER_M128_REG
 #define FLOAT_PER_M256_REG 8
 #define INT32_PER_M256_REG FLOAT_PER_M256_REG
+#define FLOAT_PER_M512_REG 16
+#define INT32_PER_M512_REG FLOAT_PER_M512_REG
 
 #define INT32_ZERO ((int32_t)0)
 #define INT32_ALLBITS ((int32_t)0xFFFFFFFF)
@@ -24,7 +28,6 @@
 #define INT64_LOWBIT  ((int64_t)0x0000000000000001)
 #define INT64_HIGHBIT ((int64_t)0x8000000000000000)
 #define INT64_ALLBITS ((int64_t)0xFFFFFFFFFFFFFFFF)
-
 
 //----------------------------------------------------------------------------
 // Functions for creating masks.
@@ -46,5 +49,10 @@ __m256i _mm256_set_mask_epi64(int);
 __m256 _mm256_set_mask_ps(int);
 __m256d _mm256_set_mask_pd(int);
 
+// AVX512 functions.
+__mmask16 _mm512_setmask_fromto_epi32(int, int);
+__mmask8 _mm512_setmask_fromto_epi64(int, int);
+__mmask16 _mm512_set_mask_epi32(int);
+__mmask8 _mm512_set_mask_epi64(int);
 
 #endif

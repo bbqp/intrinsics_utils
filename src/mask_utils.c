@@ -101,12 +101,12 @@ __m128i _mm_setmask_fromto_epi64(int from, int to)
 
 __m128i _mm_set_mask_epi32(int cutoff)
 {
-	return _mm_setmask_fromto_epi32(0, cutoff - 1);
+	return _mm_setmask_fromto_epi32(0, cutoff);
 }
 
 __m128i _mm_set_mask_epi64(int cutoff)
 {
-	return _mm_setmask_fromto_epi64(0, cutoff - 1);
+	return _mm_setmask_fromto_epi64(0, cutoff);
 }
 
 __m128 _mm_set_mask_ps(int cutoff)
@@ -326,12 +326,12 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 
 __m256i _mm256_set_mask_epi32(int cutoff)
 {	
-	return _mm256_setmask_fromto_epi32(0, cutoff - 1);
+	return _mm256_setmask_fromto_epi32(0, cutoff);
 }
 
 __m256i _mm256_set_mask_epi64(int cutoff)
 {
-	return _mm256_setmask_fromto_epi64(0, cutoff - 1);
+	return _mm256_setmask_fromto_epi64(0, cutoff);
 }
 
 __m256 _mm256_set_mask_ps(int cutoff)
@@ -342,4 +342,44 @@ __m256 _mm256_set_mask_ps(int cutoff)
 __m256d _mm256_set_mask_pd(int cutoff)
 {
 	return _mm256_castsi256_pd(_mm256_set_mask_epi64(cutoff));
+}
+
+__mmask16 _mm512_setmask_fromto_epi32(int from, int to)
+{
+    __mmask16 mask; 
+
+	if (from > to || from >= INT32_PER_M256_REG) {
+		mask = _mm512_movepi32_mask(_mm512_set1_epi32(0));
+	} else {
+		mask = _mm512_movepi32_mask(_mm512_set1_epi32(INT32_ALLBITS));
+        mask = _kshiftri_mask16(mask, from + 1);
+        mask = _kshiftli_mask16(mask, INT32_PER_M512_REG - 1 - to);
+    }
+
+	return mask; 
+}
+
+__mmask8 _mm512_setmask_fromto_epi64(int from, int to)
+{
+    __mmask8 mask; 
+
+	if (from > to || from >= INT64_PER_M256_REG) {
+		mask = _mm512_movepi64_mask(_mm512_set1_epi64(0));
+	} else {
+		mask = _mm512_movepi64_mask(_mm512_set1_epi32(INT64_ALLBITS));
+        mask = _kshiftri_mask8(mask, from + 1);
+        mask = _kshiftli_mask8(mask, INT64_PER_M512_REG - 1 - to);
+    }
+
+	return mask; 
+}
+
+__mmask16 _mm512_set_mask_epi32(int cutoff)
+{
+    return _mm512_setmask_fromto_epi32(0, cutoff);
+}
+
+__mmask8 _mm512_set_mask_epi64(int cutoff)
+{
+    return _mm512_setmask_fromto_epi64(0, cutoff);
 }
