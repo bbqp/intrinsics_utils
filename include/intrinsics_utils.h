@@ -22,6 +22,9 @@ double ddot_avx2(const double *, const double *, int);
 double ddot_indexed_avx2(const double *, const int *, const double *, int);
 double ddot_indexed2_avx2(const double *, const int *, const double *, const int *, int);
 
+float fdot_avx512(const float *, const float *, int);
+double ddot_avx512(const double *, const double *, int);
+
 float _mm_register_sum_ps(__m128);
 double _mm_register_sum_pd(__m128d);
 int _mm_count_nonzero_ps(__m128);

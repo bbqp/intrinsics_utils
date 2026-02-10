@@ -257,19 +257,53 @@ double ddot_indexed2_avx2(const double *x, const int *xindices, const double *y,
 	return _mm256_register_sum_pd(sreg);
 }
 
+float fdot_avx512(const float *, const float *, int)
+{
+	__m512 xreg;
+	__m512 yreg;
+	__m512 preg;
+	__m512 sreg = _mm256_set1_ps(0);
+	__mmask16 mask;
+	int i;
+	int cutoff = n % FLOAT_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_movepi32_mask(_mm512_set_mask_epi32(cutoff));	
+
+		xreg = _mm512_maskz_load_ps(mask, x);
+		yreg = _mm512_maskz_load_ps(mask, y);
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += FLOAT_PER_M256_REG) {
+		xreg = _mm512_load_ps(x + i);
+		yreg = _mm512_load_ps(y + i);
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	return _mm512_register_sum_ps(sreg);
+}
+
+
+double ddot_avx512(const double *x, const double *y, int n)
+{
+    return 0;
+}
+
+
+
 float _mm_register_sum_ps(__m128 vreg)
 {
     const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
 
 	vreg = _mm_hadd_ps(vreg, vreg);
-<<<<<<< HEAD
     vreg = _mm_permute_ps(vreg, imm8);
     vreg = _mm_hadd_ps(vreg, vreg);
 	
-=======
 	vreg = _mm_hadd_ps(vreg, vreg);
 
->>>>>>> 1bcaa5d (separate header and source files for mask helper functions)
 	return _mm_cvtss_f32(vreg);
 }
 
@@ -303,7 +337,6 @@ float _mm256_register_sum_pd(__m256d vreg)
 	return _mm256_cvtsd_f64(vreg);
 }
 
->>>>>>> 1bcaa5d (separate header and source files for mask helper functions)
 int _mm_count_nonzero_ps(__m128 a)
 {
 	int cmask = _mm_movemask_ps(a);
