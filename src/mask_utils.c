@@ -1,16 +1,6 @@
 #include "mask_utils.h"
 #include <immintrin.h>
 
-#define M128_LPERM_MASK (0x39 + ((0x4e) << 8) + ((0x93) << 16) + ((0xe4) << 24))
-#define M128_LPERM_TO_IMM8(NPERMS) ((M128_LPERM_MASK >> ((NPERMS) - 1)) & (INT32_ALLBITS))
-
-#define LPERM1 0x39
-#define LPERM2 0x4e
-#define LPERM3 0x93
-
-#define M128_RPERM_MASK (0x93 + ((0x4e) << 8) + ((0x39) << 16) + ((0xe4) << 24))
-#define M128_RPERM_TO_IMM8(NPERMS) ((M128_RPERM_MASK >> ((NPERMS) - 1)) & (INT32_ALLBITS))
-
 
 //----------------------------------------------------------------------------
 // MMX/SSE*-compatible functions for creating integer, single, and double
