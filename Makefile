@@ -14,55 +14,30 @@ object_dir=obj
 bin_dir=bin
 lib_dir=lib
 
-validate_obj=intrinsics_utils.o validate.o
-benchmark_obj=intrinsics_utils.o benchmark.o benchmark_utils.o
-library_obj=intrinsics_utils.o
-
-validate_obj:=$(validate_obj:%=$(object_dir)/%)
-benchmark_obj:=$(benchmark_obj:%=$(object_dir)/%)
 library_obj:=$(library_obj:%=$(object_dir)/%)
 
-cc=gcc
-ccflags=-O2 -march=native -I$(include_dir) -DUSE_INTRINSICS -DUSE_INDICES -DCONTIGUOUS_LOOP
-ldflags=
-
-so_ccflags=-O2 -march=native -I$(include_dir) -DUSE_INTRINSICS -DUSE_INDICES -DCONTIGUOUS_LOOP -fPIC
+so_ccflags=-O2 -march=native -I$(include_dir) -DUSE_INDICES -DCONTIGUOUS_LOOP -fPIC
 so_ldflags=-shared
 
 # Debug flags
 #ccflags=-O2 -march=native -g -pg -no-pie
 #ldflags=-pg -no-pie
 
-validate: $(validate_obj)
-	$(cc) $^ -o $(bin_dir)/validate  $(ldflags)
-
-benchmark: $(benchmark_obj)
-	$(cc) $^ -o $(bin_dir)/benchmark $(ldflags)
-
 intrinsic_utils: $(library_obj)
-	$(cc) $^ -o $(lib_dir)/dynamic/libintrinsics_utils.so $(so_ldflags)
-	ar rcs $(lib_dir)/dynamic/libintrinsics_utils.a $^ 
+	$(cc) $^ -o $(lib_dir)/libintrinsics_utils.so $(so_ldflags)
 
-$(object_dir)/benchmark.o: $(src_dir)/benchmark.c
+$(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/intrinsics_utils.h $(include_dir)/mask_utils.h $(include_dir)/constants.h $(include_dir)/cpu_flags.h
 	$(cc) -c $< $(ccflags) -o $@ 
 
-$(object_dir)/validate.o: $(src_dir)/validate.c
+$(object_dir)/mask_utils.o: $(src_dir)/mask_utils.c $(include_dir)/mask_utils.h $(include_dir)/constants.h $(include_dir)/cpu_flags.h
 	$(cc) -c $< $(ccflags) -o $@ 
-
-$(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/intrinsics_utils.h
-	$(cc) -c $< $(ccflags) -o $@ 
-
-$(object_dir)/benchmark_utils.o: $(src_dir)/benchmark_utils.c $(include_dir)/benchmark_utils.h
-	$(cc) -c $< $(ccflags) -o $@ 
-
 
 clean:
-	rm -rf $(object_dir)/* $(bin_dir)/* $(lib_dir)/static/* $(lib_dir)/dynamic/*
+	rm -rf $(object_dir)/* $(bin_dir)/* $(lib_dir)/*
 
-run_validate:
-	$(bin_dir)/validate.exe
-
-run_benchmark:
-	$(bin_dir)/benchmark.exe
+setup:
+	mkdir -p $(object_dir)
+	mkdir -p $(bin_dir)
+	mkdir -p $(lib_dir)
 
 .PHONY: clean, run_validate, run_benchmark
