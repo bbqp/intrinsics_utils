@@ -41,6 +41,42 @@ void _mm256_dset_value(double *x, int n, double value)
 	}
 }
 
+void _mm512_sset_value(float *x, int n, float value)
+{
+	int k;
+	int cutoff = n % FLOAT_PER_M512_REG;
+	__m512 vreg = _mm512_set1_ps(value);
+	__mmask16 mask;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi32(cutoff);
+		_mm256_mask_store_ps(x, mask, vreg);
+	}
+
+	for (k = cutoff; k < n; k += FLOAT_PER_M512_REG) {
+		_mm512_store_ps(x + k, vreg);
+	}
+}
+
+
+
+void _mm512_dset_value(double *x, int n, double value)
+{
+	int k;
+	int cutoff = n % FLOAT_PER_M512_REG;
+	__m512d vreg = _mm512_set1_ps(value);
+	__mmask8 mask;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi64(cutoff);
+		_mm512_mask_store_pd(x, mask, vreg);
+	}
+
+	for (k = cutoff; k < n; k += FLOAT_PER_M512_REG) {
+		_mm512_store_pd(x + k, vreg);
+	}
+}
+
 //----------------------------------------------------------------------------
 // Functions for computing sums of elements in registers.
 //----------------------------------------------------------------------------

@@ -10,6 +10,9 @@
 void _mm256_sset_value(float *, int, float);
 void _mm256_dset_value(double *, int, double);
 
+void _mm512_sset_value(float *, int, float);
+void _mm512_dset_value(double *, int, double);
+
 //----------------------------------------------------------------------------
 // Functions for computing sums of elements in registers.
 //----------------------------------------------------------------------------
