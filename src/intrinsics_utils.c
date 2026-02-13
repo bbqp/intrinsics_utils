@@ -589,133 +589,52 @@ int _mm512_count_nonzero_pd(__m512d);
 
 float _mm_register_min_ps(__m128 a)
 {
-	int minidx = 0;
-	float currmin = _mm_cvtss_f32(a);
-	float nextmin;
-	int i;
+    __m128 aswap = _mm_permute_ps(a, 0x11); // Swap indices 1 and 0 in each lane -> 0b 00 01 00 01 = 0b (0001) (0001) = 0x11
+    __m128 mreg = _mm_min_ps(a, aswap); 
 
-	nextmin = _mm_cvtss_f32(_mm_permute_ps(a, LPERM1));
+    aswap = _mm_permute_ps(mreg, 0xd8); // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
+    mreg = _mm_min_ps(a, aswap);
 
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	nextmin = _mm_cvtss_f32(_mm_permute_ps(a, LPERM2));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	nextmin = _mm_cvtss_f32(_mm_permute_ps(a, LPERM3));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	return currmin;
+	return _mm_cvtss_f32(mreg)
 }
 
 float _mm256_register_min_ps(__m256 a)
 {	
-	__m256i idx = _mm256_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7);
+    __m256 aswap = _mm256_permute_ps(a, 0xb1); // Swap indices 1 and 0 as well as 3 and 2 in each lane : 0b 10 11 00 01 = 0b (1011) (0001) = 0xb1
+    __m256 mreg = _mm_min_ps(a, aswap); 
 
-	int minidx = 0;
-	float currmin = _mm256_cvtss_f32(a);
-	float nextmin;
-	int i;
+    // Now move the first entry of each 64 bit chunk to the first 128-bit lane.
+    __m256i idx = _mm256_set1_epi32(0, 2, 4, 6, 1, 3, 5, 7);
+    mreg = _mm256_permutevar8x32_ps(mreg, idx);
 
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
+    // As before, swap indices 1 and 0 as well as 3 and 2 in each lane. 
+    aswap = _mm256_permute_ps(mreg, 0xb1); 
+    mreg = _mm_min_ps(a, aswap);
 
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
+    // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
+    aswap = _mm_permute_ps(mreg, 0xd8);
+    mreg = _mm_min_ps(a, aswap);
 
-
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	idx = _mm256_leftperm_epi32(idx, 1);
-	nextmin = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(a, idx));
-		
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	return currmin;
+	return _mm256_cvtss_f32(mreg);
 }
 
 double _mm_register_min_pd(__m128d a)
 {
-	__m128d a0 = _mm_unpacklo_pd(a, a);
-	__m128d a1 = _mm_unpackhi_pd(a, a);
-	__m128d min = _mm_min_pd(a0, a1);
+	__m128d aswap = _mm_permute_pd(a, 0x1); // Swap positions 1 and 0: 0b 0 1 = 0b(01) = 0x1
+	__m128d mreg = _mm_min_pd(a0, a1);
 
-	return _mm_cvtsd_f64(min);
+	return _mm_cvtsd_f64(mreg);
 }
 
 double _mm256_register_min_pd(__m256d a)
 {
-	const int imm8[3] = {
-		0x39, // [0, 1, 2, 3] -> [1, 2, 3, 0] = 0b 00 11 10 01 = 0b(0011)(1001) = 0x39
-		0x4e, // [0, 1, 2, 3] -> [2, 3, 0, 1] = 0b 01 00 11 10 = 0b(0100)(1110) = 0x4e
-		0x93  // [0, 1, 2, 3] -> [3, 0, 1, 2] = 0b 10 01 00 11 = 0b(1001)(0011) = 0x93
-	};
+    __m256d aswap = _mm256_permute_pd(a, 0x11); // Swap indices 1 and 0 in each lane -> 0b 00 01 00 01 = 0b (0001) (0001) = 0x11
+    __m256d mreg = _mm256_min_pd(a, aswap); 
 
-	int minidx = 0;
-	double currmin = _mm256_cvtsd_f64(a);
-	double nextmin;
-	int i;
+    aswap = _mm256_permute4x64_pd(mreg, 0xd8); // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
+    mreg = _mm256_min_pd(a, aswap);
 
-	nextmin = _mm256_cvtsd_f64(_mm256_permute4x64_pd(a, LPERM1));
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	nextmin = _mm256_cvtsd_f64(_mm256_permute4x64_pd(a, LPERM2));
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	nextmin = _mm256_cvtsd_f64(_mm256_permute4x64_pd(a, LPERM3));
-	if (nextmin < currmin) {
-		currmin = nextmin;
-	}
-
-	return currmin;
+	return _mm256_cvtsd_f64(mreg);
 }
 
 int _mm256_masksltnnz_epi64(__m256i a, __m256i mask)
