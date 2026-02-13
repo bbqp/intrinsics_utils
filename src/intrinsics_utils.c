@@ -94,7 +94,7 @@ float _mm256_fdot(const float *x, const float *y, int n)
 
 	if (cutoff > 0) {
 		mask = _mm256_set_mask_epi32(cutoff);
-		
+
 		xreg = _mm256_maskload_ps(x, mask);
 		yreg = _mm256_maskload_ps(y, mask);
 		preg = _mm256_mul_ps(xreg, yreg);
@@ -127,7 +127,7 @@ float _mm256_fdot_indexed(const float *x, const int *xindices, const float *y, i
 		vindex = _mm256_maskload_epi32(xindices, mask);
 		yreg = _mm256_maskload_ps(y, mask);
 		xreg = _mm256_mask_i32gather_ps(sreg, x, vindex, _mm256_castsi256_ps(mask), 4);
-		
+
 		preg = _mm256_mul_ps(xreg, yreg);
 		sreg = _mm256_add_ps(sreg, preg);
 	}
@@ -164,7 +164,7 @@ float _mm256_fdot_indexed2(const float *x, const int *xindices, const float *y, 
 
 		xreg = _mm256_mask_i32gather_ps(sreg, x, xindex, _mm256_castsi256_ps(mask), 4);
 		yreg = _mm256_mask_i32gather_ps(sreg, y, yindex, _mm256_castsi256_ps(mask), 4);
-		
+
 		preg = _mm256_mul_ps(xreg, yreg);
 		sreg = _mm256_add_ps(sreg, preg);
 	}
@@ -174,7 +174,7 @@ float _mm256_fdot_indexed2(const float *x, const int *xindices, const float *y, 
 	for (i = cutoff; i < n; i += FLOAT_PER_M256_REG) {
 		xindex = _mm256_maskload_epi32(xindices + i, mask);
 		yindex = _mm256_maskload_epi32(yindices + i, mask);
-		
+
 		xreg = _mm256_i32gather_ps(x, xindex, 4);
 		yreg = _mm256_i32gather_ps(y, yindex, 4);
 
@@ -197,7 +197,7 @@ double _mm256_ddot(const double *x, const double *y, int n)
 
 	if (cutoff > 0) {
 		mask = _mm256_set_mask_epi64(cutoff);
-		
+
 		xreg = _mm256_maskload_pd(x, mask);
 		yreg = _mm256_maskload_pd(y, mask);
 		preg = _mm256_mul_pd(xreg, yreg);
@@ -231,7 +231,7 @@ double _mm256_ddot_indexed(const double *x, const int *xindices, const double *y
 		mask = _mm256_set_mask_epi64(cutoff);
 		dmask = _mm256_castsi256_pd(mask);
 		mask128 = _mm_set_mask_epi32(cutoff);
-		
+
 		vindex = _mm_maskload_epi32(xindices, mask128);
 		xreg = _mm256_mask_i32gather_pd(sreg, x, vindex, dmask, 8);
 		yreg = _mm256_maskload_pd(y, mask);
@@ -246,7 +246,7 @@ double _mm256_ddot_indexed(const double *x, const int *xindices, const double *y
         vindex = _mm_maskload_epi32(xindices, mask128);
 		yreg = _mm256_load_pd(y + i);
 		xreg = _mm256_i32gather_pd(x, vindex, 8);
-		
+
 		preg = _mm256_mul_pd(xreg, yreg);
 		sreg = _mm256_add_pd(sreg, preg);
 	}
@@ -271,10 +271,10 @@ double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *
 		mask = _mm256_set_mask_epi64(cutoff);
 		dmask = _mm256_castsi256_pd(mask);
 		mask128 = _mm_set_mask_epi32(cutoff);
-		
+
 		xindex = _mm_maskload_epi32(xindices, mask128);
 		yindex = _mm_maskload_epi32(yindices, mask128);
-		
+
 		xreg = _mm256_mask_i32gather_pd(sreg, x, xindex, dmask, 8);
 		yreg = _mm256_mask_i32gather_pd(sreg, y, yindex, dmask, 8);
 
@@ -290,7 +290,7 @@ double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *
 
 		xreg = _mm256_i32gather_pd(x, xindex, 8);
 		yreg = _mm256_i32gather_pd(y, yindex, 8);
-		
+
 		preg = _mm256_mul_pd(xreg, yreg);
 		sreg = _mm256_add_pd(sreg, preg);
 	}
@@ -344,7 +344,7 @@ float _mm512_fdot_indexed(const float *x, const int *xindices, const float *y, i
 		vindex = _mm512_maskz_load_epi32(mask, xindices);
 		yreg = _mm512_maskz_load_ps(mask, y);
 		xreg = _mm512_mask_i32gather_ps(sreg, mask, vindex, x, 4);
-		
+
 		preg = _mm512_mul_ps(xreg, yreg);
 		sreg = _mm512_add_ps(sreg, preg);
 	}
@@ -378,10 +378,10 @@ float _mm512_fdot_indexed2(const float *x, const int *xindices, const float *y, 
 
 		xind = _mm512_maskz_load_epi32(mask, xindices);
 		yind = _mm512_maskz_load_epi32(mask, yindices);
-		
+
 		xreg = _mm512_mask_i32gather_ps(sreg, mask, xind, x, 4);
 		yreg = _mm512_mask_i32gather_ps(sreg, mask, yind, y, 4);
-		
+
 		preg = _mm512_mul_ps(xreg, yreg);
 		sreg = _mm512_add_ps(sreg, preg);
 	}
@@ -437,7 +437,7 @@ float _mm_register_sum_ps(__m128 vreg)
 	vreg = _mm_hadd_ps(vreg, vreg);
     vreg = _mm_permute_ps(vreg, imm8);
     vreg = _mm_hadd_ps(vreg, vreg);
-	
+
 	vreg = _mm_hadd_ps(vreg, vreg);
 
 	return _mm_cvtss_f32(vreg);
@@ -504,7 +504,7 @@ float _mm256_register_sum_pd(__m256d vreg)
 	vreg = _mm256_hadd_pd(vreg, vreg);
 	vreg = _mm256_permute4x64_pd(vreg, imm8);
 	vreg = _mm256_hadd_pd(vreg, vreg);
-	
+
 	return _mm256_cvtsd_f64(vreg);
 }
 
@@ -755,7 +755,7 @@ void _mm256_copy1d_epi32(int *dst, const int *src, int n)
 
 	if (cutoff > 0) {
 		mask = _mm256_set_mask_epi32(cutoff);
-		
+
 		sreg = _mm256_maskload_epi32(src, mask);
 		_mm256_maskstore_epi32(dst, mask, sreg);
 	}
@@ -781,15 +781,15 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 		jdidx = j * numi;
 		jsidx = jind[j] * nrows;
 		jreg = _mm256_set1_epi32(jsidx);
-		
+
 		if (icutoff > 0) {
 			mask = _mm256_set_mask_epi32(icutoff);
-			
+
 			kreg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(kreg, jreg);
 			_mm256_maskstore_epi32(kind + jdidx, mask, kreg);
 		}
-		
+
 		mask = _mm256_set1_epi32(INT32_PER_M256_REG);
 
 		for (i = icutoff; i < numi; i += INT32_PER_M256_REG) {
@@ -806,7 +806,7 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 			jdidx = j * numi;
 			jsidx = jind[j] * nrows;
 			jreg = _mm256_set1_epi32(jsidx);
-				
+
 			kreg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(kreg, jreg);
 			_mm256_maskstore_epi32(kind + jdidx, mask, kreg);
@@ -839,7 +839,7 @@ void _mm256_copy1d_ps(float *dst, const float *src, int n)
 
 	if (cutoff > 0) {
 		mask = _mm256_set_mask_epi32(cutoff);
-		
+
 		sreg = _mm256_maskload_ps(src, mask);
 		_mm256_maskstore_ps(dst, mask, sreg);
 	}
@@ -864,29 +864,29 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 		jdidx = j * numi;
 		jsidx = jind[j] * nrows;
 		jreg = _mm256_set1_epi32(jsidx);
-		
+
 		if (icutoff > 0) {
 			mask = _mm256_set_mask_epi32(icutoff);
-			
+
 			ireg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(jreg, ireg);
-			
+
 			// Gather the data from the source.
 			sreg = _mm256_mask_i32gather_ps(zero, src, kreg, _mm256_castsi256_ps(mask), 4);
-			
+
 			// Store the data.
 			_mm256_maskstore_ps(dst + jdidx, mask, sreg);
 		}
-		
+
 		mask = _mm256_set1_epi32(INT32_ALLBITS);
 
 		for (i = icutoff; i < numi; i += INT32_PER_M256_REG) {
 			ireg = _mm256_maskload_epi32(iind + i, mask);
 			kreg = _mm256_add_epi32(jreg, ireg);
-			
+
 			// Gather the data from the source.
 			sreg = _mm256_i32gather_ps(src, kreg, 4);
-			
+
 			// Store the data.
 			_mm256_store_ps(dst + jdidx + i, sreg);
 		}
@@ -899,7 +899,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 			jdidx = j * numi;
 			jsidx = jind[j] * nrows;
 			jreg = _mm256_set1_epi32(jsidx);
-				
+
 			ireg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(jreg, ireg);
 			sreg = _mm256_mask_i32gather_ps(zero, src, kreg, _mm256_castsi256_ps(mask), 4);
