@@ -3,7 +3,7 @@ Intrinsics Utils
 
 This repo contains several convenience functions for generating masks,
 computing dot products, copying array contents, and other utilities. This
-emmerged intially within a project for speeding up a C-implementation
+initially started within a project for speeding up a C-implementation
 of Smoothlife, and now functions as both a learning tool and a set of
 convenient functions to use in other projects.
 
