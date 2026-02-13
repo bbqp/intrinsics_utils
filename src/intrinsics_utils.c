@@ -81,7 +81,7 @@ void _mm512_dset_value(double *x, int n, double value)
 // Functions for computing sums of elements in registers.
 //----------------------------------------------------------------------------
 
-float fdot_avx2(const float *x, const float *y, int n)
+float _mm256_fdot(const float *x, const float *y, int n)
 {
 	__m256 xreg;
 	__m256 yreg;
@@ -110,7 +110,7 @@ float fdot_avx2(const float *x, const float *y, int n)
 	return _mm256_register_sum_ps(sreg);
 }
 
-float fdot_indexed_avx2(const float *x, const int *xindices, const float *y, int n)
+float _mm256_fdot_indexed(const float *x, const int *xindices, const float *y, int n)
 {
 	__m256 xreg;
 	__m256 yreg;
@@ -145,7 +145,7 @@ float fdot_indexed_avx2(const float *x, const int *xindices, const float *y, int
 	return _mm256_register_sum_ps(sreg);
 }
 
-float fdot_indexed2_avx2(const float *x, const int *xindices, const float *y, const int *yindices, int n)
+float _mm256_fdot_indexed2(const float *x, const int *xindices, const float *y, const int *yindices, int n)
 {
 	__m256 xreg;
 	__m256 yreg;
@@ -184,7 +184,7 @@ float fdot_indexed2_avx2(const float *x, const int *xindices, const float *y, co
 	return _mm256_register_sum_ps(sreg);
 }
 
-double ddot_avx2(const double *x, const double *y, int n)
+double _mm256_ddot(const double *x, const double *y, int n)
 {
 	__m256d xreg;
 	__m256d yreg;
@@ -213,7 +213,7 @@ double ddot_avx2(const double *x, const double *y, int n)
 	return _mm256_register_sum_pd(sreg);
 }
 
-double ddot_indexed_avx2(const double *x, const int *xindices, const double *y, int n)
+double _mm256_ddot_indexed(const double *x, const int *xindices, const double *y, int n)
 {
 	__m256d xreg;
 	__m256d yreg;
@@ -251,7 +251,7 @@ double ddot_indexed_avx2(const double *x, const int *xindices, const double *y, 
 	return _mm256_register_sum_pd(sreg);
 }
 
-double ddot_indexed2_avx2(const double *x, const int *xindices, const double *y, const int *yindices, int n)
+double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *y, const int *yindices, int n)
 {
 	__m256d xreg;
 	__m256d yreg;
@@ -293,18 +293,19 @@ double ddot_indexed2_avx2(const double *x, const int *xindices, const double *y,
 	return _mm256_register_sum_pd(sreg);
 }
 
-float fdot_avx512(const float *, const float *, int)
+float _mm512_fdot(const float *x, const float *y, int n)
 {
 	__m512 xreg;
 	__m512 yreg;
 	__m512 preg;
-	__m512 sreg = _mm256_set1_ps(0);
+	__m512 sreg = _mm512_set1_ps(0);
 	__mmask16 mask;
+
 	int i;
 	int cutoff = n % FLOAT_PER_M512_REG;
 
 	if (cutoff > 0) {
-		mask = _mm512_movepi32_mask(_mm512_set_mask_epi32(cutoff));	
+		mask = _mm512_set_mask_epi32(cutoff);
 
 		xreg = _mm512_maskz_load_ps(mask, x);
 		yreg = _mm512_maskz_load_ps(mask, y);
@@ -312,7 +313,7 @@ float fdot_avx512(const float *, const float *, int)
 		sreg = _mm512_add_ps(sreg, preg);
 	}
 
-	for (i = cutoff; i < n; i += FLOAT_PER_M256_REG) {
+	for (i = cutoff; i < n; i += FLOAT_PER_M512_REG) {
 		xreg = _mm512_load_ps(x + i);
 		yreg = _mm512_load_ps(y + i);
 		preg = _mm512_mul_ps(xreg, yreg);
@@ -323,12 +324,35 @@ float fdot_avx512(const float *, const float *, int)
 }
 
 
-double ddot_avx512(const double *x, const double *y, int n)
+double _mm512_ddot(const double *x, const double *y, int n)
 {
-    return 0;
+	__m512d xreg;
+	__m512d yreg;
+	__m512d preg;
+	__m512d sreg = _mm512_set1_ps(0);
+	__mmask8 mask;
+
+	int i;
+	int cutoff = n % DOUBLE_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi64(cutoff);	
+
+		xreg = _mm512_maskz_load_pd(mask, x);
+		yreg = _mm512_maskz_load_pd(mask, y);
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += FLOAT_PER_M256_REG) {
+		xreg = _mm512_load_pd(x + i);
+		yreg = _mm512_load_pd(y + i);
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	return _mm512_register_sum_pd(sreg);
 }
-
-
 
 float _mm_register_sum_ps(__m128 vreg)
 {
@@ -349,9 +373,6 @@ double _mm_register_sum_pd(__m128d vreg)
 
 	return _mm_cvtsd_f64(vreg);
 }
-
-<<<<<<< HEAD
-=======
 
 float _mm256_register_sum_ps(__m256 vreg)
 {
