@@ -248,17 +248,16 @@ double compute_elapsed_time(struct timespec *elapsed, const struct timespec *end
 {
 	double elapsed_sec;
 	double elapsed_nsec;
-	// elapsed->tv_sec = end->tv_sec - start->tv_sec;
+    int64_t nsec_diff;
 
-	// if (start->tv_nsec > end->tv_nsec) {
-		// elapsed->tv_sec -= 1;
-		// elapsed->tv_nsec = start->tv_nsec - end->tv_nsec;
-	// } else {
-		// elapsed->tv_nsec = end->tv_nsec - start->tv_nsec;
-	// }
-	
 	elapsed_sec = end->tv_sec - start->tv_sec;
-	elapsed_nsec = (end->tv_nsec * NANOSEC_TO_SEC) - (start->tv_nsec * NANOSEC_TO_SEC);
+    nsec_diff = end->tv_nsec - start->tv_nsec;
+
+    if (nsec_diff < 0) {
+        nsec_diff = -nsec_diff;
+    }
+
+	elapsed_nsec = ((double)nsec_diff) * NANOSEC_TO_SEC;
 	
 	return elapsed_sec + elapsed_nsec;
 }
