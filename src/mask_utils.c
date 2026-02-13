@@ -80,7 +80,7 @@ __m128i _mm_setmask_fromto_epi64(int from, int to)
 				break;
 			case 1:
 				mask = _mm_setr_epi64(_mm_cvtsi64_m64(0), _mm_cvtsi64_m64(INT64_ALLBITS));
-				
+
 				break;
 			default:
 				mask = _mm_set1_epi64x(0);
@@ -278,7 +278,7 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_set1_epi64x(INT64_ALLBITS);
 				}
-				
+
 				break;
 			case 1:
 				switch(to) {
@@ -291,7 +291,7 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_setr_epi64x(0, INT64_ALLBITS, INT64_ALLBITS, INT64_ALLBITS);
 				}
-				
+
 				break;
 			case 2:
 				switch(to) {
@@ -301,11 +301,11 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 					default:
 						mask = _mm256_setr_epi64x(0, 0, INT64_ALLBITS, INT64_ALLBITS);
 				}
-				
+
 				break;
 			case 3:
 				mask = _mm256_setr_epi64x(0, 0, 0, INT64_ALLBITS);
-				
+
 				break;
 			default:
 				mask = _mm256_set1_epi64x(0);
