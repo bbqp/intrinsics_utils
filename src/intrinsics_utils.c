@@ -1,5 +1,6 @@
-#include "mask_utils.h"
 #include "intrinsics_utils.h"
+#include "mask_utils.h"
+#include "constants.h"
 #include <immintrin.h>
 #include <stdio.h>
 
