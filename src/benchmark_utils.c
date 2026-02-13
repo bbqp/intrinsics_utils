@@ -18,7 +18,7 @@ int rinfo_init(struct runtime_info_s *rinfo, int ntrials, int size_min_index, in
 
 	rinfo->runtimes = calloc(rinfo->ndims * rinfo->ntrials, sizeof(double));
 	rinfo->runstats = calloc(NSTATS * rinfo->ndims, sizeof(double));
-	
+
 	if (rinfo->runtimes == NULL || rinfo->runstats == NULL) {
 		free(rinfo->runtimes);
 		free(rinfo->runstats);
@@ -39,7 +39,7 @@ int rinfo_init(struct runtime_info_s *rinfo, int ntrials, int size_min_index, in
 		rinfo->meantimes = rinfo->runstats + STAT_MEAN * rinfo->ndims;
 		rinfo->stdtimes = rinfo->runstats + STAT_STD * rinfo->ndims;
 	}
-	
+
 	return rinfo->runtimes != NULL && rinfo->runstats != NULL;
 }
 
@@ -61,25 +61,25 @@ float rinfo_get_stat(const struct runtime_info_s *rinfo, int size_index, enum st
 {
 	int idx = size_index - rinfo->size_min_index;
 	double runtime_stat = 0;
-	
+
 	switch (stype)
 	{
 		case STAT_MIN:
 			runtime_stat = rinfo->mintimes[idx];
 			break;
-		
+
 		case STAT_MAX:
 			runtime_stat = rinfo->maxtimes[idx];
 			break;
-		
+
 		case STAT_MEAN:
 			runtime_stat = rinfo->meantimes[idx];
 			break;
-		
+
 		case STAT_STD:
 			runtime_stat = rinfo->stdtimes[idx];
 	}
-	
+
 	return runtime_stat;
 }
 
@@ -88,21 +88,21 @@ void rinfo_set_stat(struct runtime_info_s *rinfo, int size_index, enum statistic
 	int idx = size_index - rinfo->size_min_index;
 	int trial_idx = idx * rinfo->ntrials;
 	double mean;
-	
+
 	switch (stype)
 	{
 		case STAT_MIN:
 			rinfo->mintimes[idx] = sample_min(rinfo->runtimes + trial_idx, rinfo->ntrials);
 			break;
-		
+
 		case STAT_MAX:
 			rinfo->maxtimes[idx] = sample_max(rinfo->runtimes + trial_idx, rinfo->ntrials);
 			break;
-		
+
 		case STAT_MEAN:
 			rinfo->meantimes[idx] = sample_mean(rinfo->runtimes + trial_idx, rinfo->ntrials);
 			break;
-		
+
 		case STAT_STD:
 			mean = sample_mean(rinfo->runtimes + trial_idx, rinfo->ntrials);
 			rinfo->stdtimes[idx] = sample_std(rinfo->runtimes + trial_idx, rinfo->ntrials, mean);
@@ -112,7 +112,7 @@ void rinfo_set_stat(struct runtime_info_s *rinfo, int size_index, enum statistic
 int rinfo_get_dimension(const struct runtime_info_s *rinfo, int size_index)
 {
 	int dimension = 1, factor = 1;
-	
+
 	if (rinfo->type == SEQT_LINEAR) {
 		dimension = size_index * rinfo->step + rinfo->offset;
 	} else if(rinfo->type == SEQT_EXPONENTIAL) {
@@ -123,10 +123,10 @@ int rinfo_get_dimension(const struct runtime_info_s *rinfo, int size_index)
 		for (int i = 0; i < size_index; i++) {
 			dimension *= factor;
 		}
-		
+
 		dimension += rinfo->offset;
 	}
-	
+
 	return dimension;
 }
 
@@ -177,7 +177,7 @@ int rinfo_write_to_file(const struct runtime_info_s *rinfo, const char *filename
 	} else {
 		printf("ERROR: Unable to write output data to file.\n");
 	}
-	
+
 	return open_status;
 }
 
@@ -203,25 +203,25 @@ double sample_max(const double *x, int n)
 {
 	int maxidx = 0;
 	double currmax = x[0];
-	
+
 	for (int k = 1; k < n; k++) {
 		if (x[k] > currmax) {
 			maxidx = k;
 			currmax = x[k];
 		}
 	}
-	
+
 	return currmax;
 }
 
 double sample_mean(const double *x, int n)
 {
 	double sum = 0;
-	
+
 	for (int k = 0; k < n; k++) {
 		sum += x[k];
 	}
-	
+
 	return sum / n;
 }
 
@@ -229,13 +229,13 @@ double sample_var(const double *x, int n, double mean)
 {
 	double sse = 0;
 	double xk;
-	
+
 	for (int k = 0; k < n; k++) {
 		xk = x[k];
 
 		sse += (xk - mean) * (xk - mean);
 	}
-	
+
 	return sse / n;
 }
 
@@ -258,6 +258,6 @@ double compute_elapsed_time(struct timespec *elapsed, const struct timespec *end
     }
 
 	elapsed_nsec = ((double)nsec_diff) * NANOSEC_TO_SEC;
-	
+
 	return elapsed_sec + elapsed_nsec;
 }
