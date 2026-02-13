@@ -637,101 +637,62 @@ double _mm256_register_min_pd(__m256d a)
 	return _mm256_cvtsd_f64(mreg);
 }
 
-int _mm256_masksltnnz_epi64(__m256i a, __m256i mask)
-{
-	int displacement = 0;
-	__m256i azero;
-
-	if (!_mm256_testz_si256(a, a)) {
-		// Get the zero positions in the remainder of the register a.
-		azero = _mm256_andnot_si256(a, mask);
-		
-		while (_mm256_extract_epi64(azero, 0)) {
-			azero = _mm256_leftshift_epi64(azero, 1);
-			mask = _mm256_leftshift_epi64(mask, 1);
-			
-			displacement++;
-		}
-	}
-
-	return displacement;
-}
+//----------------------------------------------------------------------------
+// Functions for permuting elements in registers.
+//----------------------------------------------------------------------------
 
 __m256d _mm256_leftperm_pd(__m256d a, int nperms)
-{	
-	switch (nperms) {
-		case 1:
-			_mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(1));
-			break;
-		case 2:
-			_mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(2));
-			break;
-		case 3:
-			_mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(3));
-	}
+{
+    nperms = nperms % DOUBLE_PER_M256_REG;
 
-	return a;
+	return _mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(nperms));
 }
 
 __m256d _mm256_rightperm_pd(__m256d a, int nperms)
 {
-	switch (nperms) {
-		case 1:
-			_mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(1));
-			break;
-		case 2:
-			_mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(2));
-			break;
-		case 3:
-			_mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(3));
-	}
+    nperms = nperms % DOUBLE_PER_M256_REG;
 
-	return a;
+	return _mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(nperms));
 }
 
 __m256i _mm256_leftperm_epi64(__m256i a, int nperms)
 {
-	switch (nperms) {
-		case 1:
-			_mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(1));
-			break;
-		case 2:
-			_mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(2));
-			break;
-		case 3:
-			_mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(3));
-	}
+    nperms = nperms % INT64_PER_M256_REG;
 
-	return a;
-}
-
-__m256i _mm256_maskleftperm_epi64(__m256i a, __m256i mask)
-{
-	return _mm256_and_si256(_mm256_leftperm_epi64(a, 1), mask);
-}
-
-__m256i _mm256_leftshift_epi64(__m256i a, int nshifts)
-{
-	__m256i mask;
-
-	if (nshifts > 0) {
-		mask = _mm256_set_mask_epi64(INT64_PER_M256_REG - nshifts);
-		a = _mm256_maskleftperm_epi64(a, mask);
-	}
-
-	return a;
+    return _mm256_permute4x64_epi64(a, M128_LPERM_TO_IMM8(nperms));
 }
 
 __m256i _mm256_leftperm_epi32(__m256i a, int nperms)
 {
-	__m256i lpidx = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 0);
-	int p;
+	__m256i lpidx = _mm256_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7);
 
-	for (p = 0; p < nperms; p++) {
-		a = _mm256_permutevar8x32_epi32(a, lpidx);
-	}
+    nperms = nperms % INT32_PER_M256_REG;
 
-	return a;
+    switch (nperms) {
+        case 1:
+            lpidx = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 0);
+            break;
+        case 2:
+            lpidx = _mm256_setr_epi32(2, 3, 4, 5, 6, 7, 0, 1);
+            break;
+        case 3:
+            lpidx = _mm256_setr_epi32(3, 4, 5, 6, 7, 0, 1, 2);
+            break;
+        case 4:
+            lpidx = _mm256_setr_epi32(4, 5, 6, 7, 0, 1, 2, 3);
+            break;
+        case 5:
+            lpidx = _mm256_setr_epi32(5, 6, 7, 0, 1, 2, 3, 4);
+            break;
+        case 6:
+            lpidx = _mm256_setr_epi32(6, 7, 0, 1, 2, 3, 4, 5);
+            break;
+        case 7:
+            lpidx = _mm256_setr_epi32(7, 0, 1, 2, 3, 4, 5, 6);
+
+    }
+
+	return _mm256_permutevar8x32_epi32(a, lpidx);
 }
 
 //----------------------------------------------------------------------------
