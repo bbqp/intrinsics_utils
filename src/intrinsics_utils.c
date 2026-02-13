@@ -323,6 +323,77 @@ float _mm512_fdot(const float *x, const float *y, int n)
 	return _mm512_register_sum_ps(sreg);
 }
 
+float _mm512_fdot_indexed(const float *x, const int *xindices, const float *y, int n)
+{
+	__m512 xreg;
+	__m512 yreg;
+	__m512 preg;
+	__m512 sreg = _mm512_set1_ps(0);
+	__m512i vindex;
+	__mmask16 mask;
+	int i;
+	int cutoff = n % FLOAT_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi32(cutoff);
+		vindex = _mm512_maskz_load_epi32(mask, xindices);
+		yreg = _mm512_maskz_load_ps(mask, y);
+		xreg = _mm512_mask_i32gather_ps(sreg, mask, vindex, x, 4);
+		
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += FLOAT_PER_M512_REG) {
+		vindex = _mm512_load_epi32(xindices + i);
+		yreg = _mm512_load_ps(y + i);
+		xreg = _mm512_i32gather_ps(vindex, x, 4);
+
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	return _mm512_register_sum_ps(sreg);
+}
+
+float _mm512_fdot_indexed2(const float *x, const int *xindices, const float *y, const int *yindices, int n)
+{
+	__m512 xreg;
+	__m512 yreg;
+	__m512 preg;
+	__m512 sreg = _mm512_set1_ps(0);
+	__m512i xind;
+	__m512i yind;
+	__mmask16 mask;
+	int i;
+	int cutoff = n % FLOAT_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi32(cutoff);
+
+		xind = _mm512_maskz_load_epi32(mask, xindices);
+		yind = _mm512_maskz_load_epi32(mask, yindices);
+		
+		xreg = _mm512_mask_i32gather_ps(sreg, mask, xind, x, 4);
+		yreg = _mm512_mask_i32gather_ps(sreg, mask, yind, y, 4);
+		
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += FLOAT_PER_M512_REG) {
+		xind = _mm512_load_epi32(xindices + i);
+		yind = _mm512_load_epi32(yindices + i);
+
+		xreg = _mm512_i32gather_ps(xind, x, 4);
+		yreg = _mm512_i32gather_ps(yind, y, 4);
+
+		preg = _mm512_mul_ps(xreg, yreg);
+		sreg = _mm512_add_ps(sreg, preg);
+	}
+
+	return _mm512_register_sum_ps(sreg);
+}
 
 double _mm512_ddot(const double *x, const double *y, int n)
 {

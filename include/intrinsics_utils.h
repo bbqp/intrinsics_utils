@@ -26,6 +26,9 @@ double _mm256_ddot_indexed(const double *, const int *, const double *, int);
 double _mm256_ddot_indexed2(const double *, const int *, const double *, const int *, int);
 
 float _mm512_fdot(const float *, const float *, int);
+float _mm512_fdot_indexed(const float *, const int *, const float *, int);
+float _mm512_fdot_indexed2(const float *, const int *, const float *, const int *, int);
+
 double _mm512_ddot(const double *, const double *, int);
 
 float _mm_register_sum_ps(__m128);
