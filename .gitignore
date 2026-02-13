@@ -1,3 +1,4 @@
-# Ignore anything for tests.
-test
-unity
+# Ignore files generated when building the library.
+obj
+lib
+bin
