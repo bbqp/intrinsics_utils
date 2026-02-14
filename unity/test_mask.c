@@ -2,10 +2,12 @@
 #include "mask_utils.h"
 #include "cpu_flags.h"
 #include "constants.h"
+#include <immintrin.h>
 
 #define NUM_RANGES (INT32_PER_M128_REG + 2)
 
-static int m128_epi32_result[INT32_PER_M128_REG];
+static int m128_epi32_expected[INT32_PER_M128_REG];
+static int m128_epi32_actual[INT32_PER_M128_REG];
 static int start_indices[NUM_RANGES];
 static int end_indices[NUM_RANGES];
 
@@ -46,7 +48,7 @@ void test_mm_set_mask_fromto_epi32(void)
 
 void test_mm_set_mask_epi32(void)
 {
-    int cutoff = INT32_PER_M128_REG / 2 - 1;
+    int cutoff = INT32_PER_AVX2_REG / 2 - 1;
     __m128i mask;
     int expected[INT32_PER_M128_REG];
 
@@ -57,14 +59,14 @@ void test_mm_set_mask_epi32(void)
     mask = _mm_set_mask_epi32(cutoff);
     _mm_store_epi32(mask, expected);
 
-    TEST_ASSERT_EQUAL_INT32_ARRAY(expected, m128_epi32_result, INT32_PER_M128_REG);
+    TEST_ASSERT_EQUAL_INT32_ARRAY(m128_epi32_expected, m128_epi32_actual, INT32_PER_M128_REG);
 }
 
 void m128_epi32_set_result_fromto(int from, int to)
 {
     if (from > to) {
         for (int i = 0; i < INT32_PER_M128_REG; i++) {
-            m128_epi32_result[i] = 0;
+            m128_epi32_expected[i] = 0;
         }
     } else {
         if (from < 0) {
@@ -76,7 +78,7 @@ void m128_epi32_set_result_fromto(int from, int to)
         }
 
         for (int i = from; i <= to; i++) {
-            m128_epi32_result[i] = INT32_ALLBITS;
+            m128_epi32_expected[i] = INT32_ALLBITS;
         }
     }
 }
