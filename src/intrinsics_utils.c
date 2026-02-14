@@ -491,31 +491,6 @@ int _mm_count_nonzero_pd(__m128d a)
 	return _popcnt32(cmask);
 }
 
-float _mm256_register_sum_ps(__m256 vreg)
-{
-	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
-
-	vreg = _mm256_hadd_ps(vreg, vreg);
-	vreg = _mm256_permutevar8x32_ps(vreg, idx);
-	vreg = _mm256_hadd_ps(vreg, vreg);
-	vreg = _mm256_hadd_ps(vreg, vreg);
-
-	return _mm256_cvtss_f32(vreg);
-}
-
-float _mm256_register_sum_pd(__m256d vreg)
-{
-
-    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
-
-	vreg = _mm256_hadd_pd(vreg, vreg);
-	vreg = _mm256_permute4x64_pd(vreg, imm8);
-	vreg = _mm256_hadd_pd(vreg, vreg);
-
-	return _mm256_cvtsd_f64(vreg);
-}
-
-
 int _mm256_count_nonzero_ps(__m256 a)
 {
 	int cmask = _mm256_movemask_ps(a);
@@ -605,25 +580,40 @@ float _mm_register_min_ps(__m128 a)
     aswap = _mm_permute_ps(mreg, 0xd8); // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
     mreg = _mm_min_ps(a, aswap);
 
-	return _mm_cvtss_f32(mreg)
+	return _mm_cvtss_f32(mreg);
 }
 
 float _mm256_register_min_ps(__m256 a)
 {	
-    __m256 aswap = _mm256_permute_ps(a, 0xb1); // Swap indices 1 and 0 as well as 3 and 2 in each lane : 0b 10 11 00 01 = 0b (1011) (0001) = 0xb1
-    __m256 mreg = _mm_min_ps(a, aswap); 
+    // Cross-lane permutation indices needed for final swap.
+    __m256i idx = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
 
-    // Now move the first entry of each 64 bit chunk to the first 128-bit lane.
-    __m256i idx = _mm256_set1_epi32(0, 2, 4, 6, 1, 3, 5, 7);
+    // Perform the comparison two elements at a time across all lanes.
+
+    __m256 aswap = _mm256_permute_ps(a, 0xb1); // Swap indices 1 and 0 as well as 3 and 2 in each lane:
+                                               // 0b 10 11 00 01 = 0b (1011) (0001) = 0xb1
+    __m256 mreg = _mm256_min_ps(a, aswap); 
+
+    // After the first comparison, we now have four unique values in the
+    // minimum register mreg, with each unique value repeated every 64 bits.
+    // To move the comparison along, switch the middle two entires of each
+    // 128-bit lane, swap pairwise-adjacent elements as before, and compute
+    // the next minimum.
+
+    mreg = _mm256_permute_ps(mreg, 0xd8); // Swap indices 2 and 1 in each lane: 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
+    aswap = _mm256_permute_ps(mreg, 0xb1); // As before, swap indices 1 and 0 as well as 3 and 2 in each lane.  
+    mreg = _mm256_min_ps(mreg, aswap);
+
+    // After the second comparison, we now have two unique elements: The
+    // first is repeated four times in the first 128-bit lane, and the
+    // second value in the second lane. This necessitates permuting values
+    // across all lanes to interleave and compute the minimum value overall.
+    // After permuting, we swap elements at positions 1 and 2 in each lane as
+    // before, and compute the minimum.
+ 
     mreg = _mm256_permutevar8x32_ps(mreg, idx);
-
-    // As before, swap indices 1 and 0 as well as 3 and 2 in each lane. 
-    aswap = _mm256_permute_ps(mreg, 0xb1); 
-    mreg = _mm_min_ps(a, aswap);
-
-    // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
-    aswap = _mm_permute_ps(mreg, 0xd8);
-    mreg = _mm_min_ps(a, aswap);
+    aswap = _mm256_permute_ps(mreg, 0xb1);
+    mreg = _mm256_min_ps(mreg, aswap);
 
 	return _mm256_cvtss_f32(mreg);
 }
@@ -631,17 +621,19 @@ float _mm256_register_min_ps(__m256 a)
 double _mm_register_min_pd(__m128d a)
 {
 	__m128d aswap = _mm_permute_pd(a, 0x1); // Swap positions 1 and 0: 0b 0 1 = 0b(01) = 0x1
-	__m128d mreg = _mm_min_pd(a0, a1);
+	__m128d mreg = _mm_min_pd(a, aswap);
 
 	return _mm_cvtsd_f64(mreg);
 }
 
 double _mm256_register_min_pd(__m256d a)
 {
-    __m256d aswap = _mm256_permute_pd(a, 0x11); // Swap indices 1 and 0 in each lane -> 0b 00 01 00 01 = 0b (0001) (0001) = 0x11
+    __m256d aswap = _mm256_permute_pd(a, 0x11); // Swap indices 1 and 0 in each lane ->
+                                                // 0b 00 01 00 01 = 0b (0001) (0001) = 0x11
     __m256d mreg = _mm256_min_pd(a, aswap); 
 
-    aswap = _mm256_permute4x64_pd(mreg, 0xd8); // Swap indices 1 and 2 -> 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
+    aswap = _mm256_permute4x64_pd(mreg, 0xd8); // Swap indices 1 and 2 across lanes ->
+                                               // 0b 11 01 10 00 = 0b (1101) (1000) = 0xd8
     mreg = _mm256_min_pd(a, aswap);
 
 	return _mm256_cvtsd_f64(mreg);
