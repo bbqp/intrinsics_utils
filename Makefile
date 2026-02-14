@@ -33,7 +33,7 @@ $(object_dir)/mask_utils.o: $(src_dir)/mask_utils.c $(include_dir)/mask_utils.h 
 	$(cc) -c $< $(ccflags) -o $@ 
 
 clean:
-	rm -rf $(object_dir)/* $(bin_dir)/* $(lib_dir)/*
+	rm -rf $(object_dir) $(bin_dir) $(lib_dir)
 
 setup:
 	mkdir -p $(object_dir)
