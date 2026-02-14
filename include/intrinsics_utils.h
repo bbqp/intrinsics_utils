@@ -60,17 +60,17 @@ double _mm256_register_min_pd(__m256d);
 // Functions for permuting elements in registers.
 //----------------------------------------------------------------------------
 
+__m256 _mm256_leftperm_ps(__m256, int);
+__m256 _mm256_rightperm_ps(__m256, int);
+
 __m256d _mm256_leftperm_pd(__m256d, int);
 __m256d _mm256_rightperm_pd(__m256d, int);
-__m256i _mm256_leftperm_epi64(__m256i, int);
+
 __m256i _mm256_leftperm_epi32(__m256i, int);
+__m256i _mm256_rightperm_epi32(__m256i, int);
 
-//----------------------------------------------------------------------------
-// Helper routines for permuting
-//----------------------------------------------------------------------------
-
-__m128 _mm_shift_one_left_ps(__m128, int);
-__m128 _mm_shift_one_right_ps(__m128, int);
+__m256i _mm256_leftperm_epi64(__m256i, int);
+__m256i _mm256_rightperm_epi64(__m256i, int);
 
 //----------------------------------------------------------------------------
 // Helper routines for copying data.
@@ -83,10 +83,14 @@ void _mm256_copy1d_ps(float *, const float *, int);
 void _mm256_copy2d_indexed_ps(float *, const float *, int, const int *, const int *, int, int);
 
 //----------------------------------------------------------------------------
-// Helper routines for printing.
+// Helper routines for printing and buffer storage.
 //----------------------------------------------------------------------------
 
 void _mm256_print_register_epi32(__m256i);
 void _mm256_print_register_ps(__m256);
+
+void _mm256_store_register_epi32(__m256i, int *, int);
+void _mm256_store_register_ps(__m256i, int *, int);
+void _mm256_store_register_pd(__m256i, int *, int);
 
 #endif
