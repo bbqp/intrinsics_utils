@@ -2,3 +2,6 @@
 obj
 lib
 bin
+
+# Ignore directories for testing and validation.
+unity
