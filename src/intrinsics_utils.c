@@ -1,6 +1,7 @@
 #include "intrinsics_utils.h"
 #include "mask_utils.h"
 #include "constants.h"
+#include "cpu_flags.h"
 #include <immintrin.h>
 #include <stdio.h>
 
@@ -42,6 +43,7 @@ void _mm256_dset_value(double *x, int n, double value)
 	}
 }
 
+#ifdef SUPPORTS_AV512
 void _mm512_sset_value(float *x, int n, float value)
 {
 	int k;
@@ -59,8 +61,6 @@ void _mm512_sset_value(float *x, int n, float value)
 	}
 }
 
-
-
 void _mm512_dset_value(double *x, int n, double value)
 {
 	int k;
@@ -77,6 +77,7 @@ void _mm512_dset_value(double *x, int n, double value)
 		_mm512_store_pd(x + k, vreg);
 	}
 }
+#endif
 
 //----------------------------------------------------------------------------
 // Functions for computing sums of elements in registers.
@@ -298,6 +299,8 @@ double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *
 	return _mm256_register_sum_pd(sreg);
 }
 
+
+#ifdef SUPPORTS_AV512
 float _mm512_fdot(const float *x, const float *y, int n)
 {
 	__m512 xreg;
@@ -429,6 +432,7 @@ double _mm512_ddot(const double *x, const double *y, int n)
 
 	return _mm512_register_sum_pd(sreg);
 }
+#endif
 
 float _mm_register_sum_ps(__m128 vreg)
 {
@@ -462,9 +466,12 @@ float _mm256_register_sum_ps(__m256 vreg)
 	return _mm256_cvtss_f32(vreg);
 }
 
-float _mm256_register_sum_pd(__m256d vreg)
+double _mm256_register_sum_pd(__m256d vreg)
 {
+    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
+
 	vreg = _mm256_hadd_pd(vreg, vreg);
+    vreg = _mm256_permute4x64_pd(vreg, imm8); 
 	vreg = _mm256_hadd_pd(vreg, vreg);
 
 	return _mm256_cvtsd_f64(vreg);
@@ -523,6 +530,7 @@ int _mm256_count_nonzero_pd(__m256d a)
 	return _popcnt32(cmask);
 }
 
+#ifdef SUPPORTS_AVX512
 float _mm512_register_sum_ps(__512 vreg)
 {
     __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
@@ -583,6 +591,7 @@ int _mm512_count_nonzero_pd(__m512d);
 
     return _popcnt32(clo) + _popcnt32(chi);
 }
+#endif
 
 //----------------------------------------------------------------------------
 // Functions for computing statistics of registers.
