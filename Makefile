@@ -16,15 +16,16 @@ lib_dir=lib
 
 library_obj:=$(library_obj:%=$(object_dir)/%)
 
-so_ccflags=-O2 -march=native -I$(include_dir) -DUSE_INDICES -DCONTIGUOUS_LOOP -fPIC
-so_ldflags=-shared
+cc=gcc
+ccflags=-fPIC -march=native -I$(include_dir) -DCONTIGUOUS_LOOP
+ldflags=-shared
 
 # Debug flags
 #ccflags=-O2 -march=native -g -pg -no-pie
 #ldflags=-pg -no-pie
 
-intrinsic_utils: $(library_obj)
-	$(cc) $^ -o $(lib_dir)/libintrinsics_utils.so $(so_ldflags)
+intrinsics_utils: $(object_dir)/intrinsics_utils.o $(object_dir)/mask_utils.o
+	$(cc) $^ -o $(lib_dir)/libintrinsics_utils.so $(ldflags)
 
 $(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/intrinsics_utils.h $(include_dir)/mask_utils.h $(include_dir)/constants.h $(include_dir)/cpu_flags.h
 	$(cc) -c $< $(ccflags) -o $@ 
@@ -40,4 +41,4 @@ setup:
 	mkdir -p $(bin_dir)
 	mkdir -p $(lib_dir)
 
-.PHONY: clean, run_validate, run_benchmark
+.PHONY: clean, setup
