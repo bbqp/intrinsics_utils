@@ -1,6 +1,7 @@
 #ifndef INTRINSICS_UTILS
 #define INTRINSICS_UTILS
 
+#include "cpu_flags.h"
 #include <immintrin.h>
 
 //----------------------------------------------------------------------------
@@ -25,11 +26,13 @@ double _mm256_ddot(const double *, const double *, int);
 double _mm256_ddot_indexed(const double *, const int *, const double *, int);
 double _mm256_ddot_indexed2(const double *, const int *, const double *, const int *, int);
 
+#ifdef SUPPORTS_AVX512
 float _mm512_fdot(const float *, const float *, int);
 float _mm512_fdot_indexed(const float *, const int *, const float *, int);
 float _mm512_fdot_indexed2(const float *, const int *, const float *, const int *, int);
 
 double _mm512_ddot(const double *, const double *, int);
+#endif
 
 float _mm_register_sum_ps(__m128);
 double _mm_register_sum_pd(__m128d);
@@ -41,10 +44,12 @@ double _mm256_register_sum_pd(__m256d);
 int _mm256_count_nonzero_ps(__m256);
 int _mm256_count_nonzero_pd(__m256d);
 
+#ifdef SUPPORTS_AVX512
 float _mm512_register_sum_ps(__512);
 double _mm512_register_sum_pd(__m512d);
 int _mm512_count_nonzero_ps(__m512);
 int _mm512_count_nonzero_pd(__m512d);
+#endif
 
 //----------------------------------------------------------------------------
 // Functions for computing statistics of registers.
