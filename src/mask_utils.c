@@ -335,6 +335,7 @@ __m256d _mm256_set_mask_pd(int cutoff)
 	return _mm256_castsi256_pd(_mm256_set_mask_epi64(cutoff));
 }
 
+#ifdef SUPPORTS_AVX512
 __mmask16 _mm512_setmask_fromto_epi32(int from, int to)
 {
     __mmask16 mask;
@@ -546,3 +547,4 @@ __mmask8 _mm512_set_mask_epi64(int cutoff)
 {
     return _mm512_setmask_fromto_epi64(0, cutoff);
 }
+#endif
