@@ -45,7 +45,7 @@ int _mm256_count_nonzero_ps(__m256);
 int _mm256_count_nonzero_pd(__m256d);
 
 #ifdef SUPPORTS_AVX512
-float _mm512_register_sum_ps(__512);
+float _mm512_register_sum_ps(__m512);
 double _mm512_register_sum_pd(__m512d);
 int _mm512_count_nonzero_ps(__m512);
 int _mm512_count_nonzero_pd(__m512d);

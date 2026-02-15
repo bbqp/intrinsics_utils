@@ -436,10 +436,8 @@ double _mm512_ddot(const double *x, const double *y, int n)
 
 float _mm_register_sum_ps(__m128 vreg)
 {
-    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
-
 	vreg = _mm_hadd_ps(vreg, vreg);
-    vreg = _mm_permute_ps(vreg, imm8);
+    vreg = _mm_permute_ps(vreg, 0xd8); // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
     vreg = _mm_hadd_ps(vreg, vreg);
 
 	vreg = _mm_hadd_ps(vreg, vreg);
@@ -468,10 +466,9 @@ float _mm256_register_sum_ps(__m256 vreg)
 
 double _mm256_register_sum_pd(__m256d vreg)
 {
-    const int imm8 = 0xd8; // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
-
 	vreg = _mm256_hadd_pd(vreg, vreg);
-    vreg = _mm256_permute4x64_pd(vreg, imm8); 
+    vreg = _mm256_permute4x64_pd(vreg, 0xd8); // Swap positions 1 and 2:
+                                              // 0xd8 = 0b 1101 1000 = 0b 11 01 10 00 
 	vreg = _mm256_hadd_pd(vreg, vreg);
 
 	return _mm256_cvtsd_f64(vreg);
@@ -506,7 +503,7 @@ int _mm256_count_nonzero_pd(__m256d a)
 }
 
 #ifdef SUPPORTS_AVX512
-float _mm512_register_sum_ps(__512 vreg)
+float _mm512_register_sum_ps(__m512 vreg)
 {
     __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
     __m256 vhi = _mm512_extractf32x8_ps(vreg, 1);
@@ -529,40 +526,38 @@ float _mm512_register_sum_ps(__512 vreg)
 
 double _mm512_register_sum_pd(__m512d vreg)
 {
-    __m256 vlo = _mm512_extractf64x4_pd(vreg, 0);
-    __m256 vhi = _mm512_extractf64x4_pd(vreg, 1);
-
-    // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
-    const int imm8 = 0xd8;
+    __m256d vlo = _mm512_extractf64x4_pd(vreg, 0);
+    __m256d vhi = _mm512_extractf64x4_pd(vreg, 1);
 
 	vlo = _mm256_hadd_pd(vlo, vlo);
 	vhi = _mm256_hadd_pd(vhi, vhi);
 
-	vlo = _mm256_permute4x64_pd(vlo, imm8);
-	vhi = _mm256_permute4x64_pd(vhi, imm8);
+    // Swap positions 1 and 2: 0xd8 = 0b 1101 1000 = 0b 11 01 10 00
+	vlo = _mm256_permute4x64_pd(vlo, 0xd8);
+	vhi = _mm256_permute4x64_pd(vhi, 0xd8);
 
     vlo = _mm256_hadd_pd(vlo, vlo);
     vhi = _mm256_hadd_pd(vhi, vhi);
 
-    return _mm256_cvtss_f32(vlo) + _mm256_cvtss_f32(vhi); 
+    return _mm256_cvtsd_f64(vlo) + _mm256_cvtsd_f64(vhi); 
 }
 
 int _mm512_count_nonzero_ps(__m512 vreg)
 {
     __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
     __m256 vhi = _mm512_extractf32x8_ps(vreg, 1);
-	int clo = _mm256_movemask_ps(clo);
-	int chi = _mm256_movemask_ps(chi);
+	int clo = _mm256_movemask_ps(vlo);
+	int chi = _mm256_movemask_ps(vhi);
 
     return _popcnt32(clo) + _popcnt32(chi);
 }
 
-int _mm512_count_nonzero_pd(__m512d);
+int _mm512_count_nonzero_pd(__m512d vreg)
 {
-    __m256 vlo = _mm512_extractf64x4_pd(vreg, 0);
-    __m256 vhi = _mm512_extractf64x4_pd(vreg, 1);
-	int clo = _mm256_movemask_ps(clo);
-	int chi = _mm256_movemask_ps(chi);
+    __m256d vlo = _mm512_extractf64x4_pd(vreg, 0);
+    __m256d vhi = _mm512_extractf64x4_pd(vreg, 1);
+	int clo = _mm256_movemask_pd(vlo);
+	int chi = _mm256_movemask_pd(vhi);
 
     return _popcnt32(clo) + _popcnt32(chi);
 }
@@ -680,21 +675,43 @@ __m256 _mm256_rightperm_ps(__m256 a, int nperms)
 {
     nperms = FLOAT_PER_M256_REG - (nperms % FLOAT_PER_M256_REG);
 
-    return _mm256_leftperm_epi32(__m256i a, nperms)
+    return _mm256_leftperm_ps(a, nperms);
 }
 
 __m256d _mm256_leftperm_pd(__m256d a, int nperms)
 {
     nperms = nperms % DOUBLE_PER_M256_REG;
 
-	return _mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(nperms));
+    switch (nperms) {
+        case 1:
+            a = _mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(1));
+            break;
+        case 2:
+            a = _mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(2));
+            break;
+        case 3:
+            a = _mm256_permute4x64_pd(a, M128_LPERM_TO_IMM8(3));
+    }
+
+	return a;
 }
 
 __m256d _mm256_rightperm_pd(__m256d a, int nperms)
 {
     nperms = nperms % DOUBLE_PER_M256_REG;
 
-	return _mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(nperms));
+    switch (nperms) {
+        case 1:
+            a = _mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(1));
+            break;
+        case 2:
+            a = _mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(2));
+            break;
+        case 3:
+            a = _mm256_permute4x64_pd(a, M128_RPERM_TO_IMM8(3));
+    }
+
+	return a;
 }
 
 __m256i _mm256_leftperm_epi32(__m256i a, int nperms)
@@ -734,21 +751,43 @@ __m256i _mm256_rightperm_epi32(__m256i a, int nperms)
 {
     nperms = INT32_PER_M256_REG - (nperms % INT32_PER_M256_REG);
 
-    return _mm256_leftperm_epi32(__m256i a, nperms)
+    return _mm256_leftperm_epi32(a, nperms);
 }
 
 __m256i _mm256_leftperm_epi64(__m256i a, int nperms)
 {
     nperms = nperms % INT64_PER_M256_REG;
 
-    return _mm256_permute4x64_epi64(a, M128_LPERM_TO_IMM8(nperms));
+    switch (nperms) {
+        case 1:
+            a = _mm256_permute4x64_epi64(a, M128_LPERM_TO_IMM8(1));
+            break;
+        case 2:
+            a = _mm256_permute4x64_epi64(a, M128_LPERM_TO_IMM8(2));
+            break;
+        case 3:
+            a = _mm256_permute4x64_epi64(a, M128_LPERM_TO_IMM8(3));
+    }
+
+    return a;
 }
 
 __m256i _mm256_rightperm_epi64(__m256i a, int nperms)
 {
     nperms = nperms % INT64_PER_M256_REG;
 
-    return _mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(nperms));
+    switch (nperms) {
+        case 1:
+            a = _mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(1));
+            break;
+        case 2:
+            a = _mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(2));
+            break;
+        case 3:
+            a = _mm256_permute4x64_epi64(a, M128_RPERM_TO_IMM8(3));
+    }
+
+    return a;
 }
 
 //----------------------------------------------------------------------------
