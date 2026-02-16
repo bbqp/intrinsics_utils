@@ -20,8 +20,8 @@ void test_mm_set_mask_fromto_epi32(void);
 void test_mm_set_mask_epi32(void);
 
 // Forward declarations for setting results for validation
-void m128_epi32_set_result_fromto(int, int);
-void m128_epi32_set_result_cutoff(int);
+void m128_epi32_set_expected_fromto(int, int);
+void m128_epi32_set_expected_cutoff(int);
 
 int main(int argc, char *argv[])
 {
@@ -48,21 +48,21 @@ void test_mm_set_mask_fromto_epi32(void)
 
 void test_mm_set_mask_epi32(void)
 {
-    int cutoff = INT32_PER_AVX2_REG / 2 - 1;
-    __m128i mask;
-    int expected[INT32_PER_M128_REG];
+    int cutoff = INT32_PER_M128_REG / 2 - 1;
+    __m128i result_mask;
+    __m128i store_mask = _mm_set1_epi32(INT32_ALLBITS);
 
     // Set the expected result.
-    m128_epi32_set_result_cutoff(cutoff);
+    m128_epi32_set_expected_cutoff(cutoff);
 
-    // Store the expected result.
-    mask = _mm_set_mask_epi32(cutoff);
-    _mm_store_epi32(mask, expected);
+    // Store the actual result.
+    result_mask = _mm_set_mask_epi32(cutoff);
+    _mm_maskstore_epi32(m128_epi32_actual, store_mask, result_mask);
 
     TEST_ASSERT_EQUAL_INT32_ARRAY(m128_epi32_expected, m128_epi32_actual, INT32_PER_M128_REG);
 }
 
-void m128_epi32_set_result_fromto(int from, int to)
+void m128_epi32_set_expected_fromto(int from, int to)
 {
     if (from > to) {
         for (int i = 0; i < INT32_PER_M128_REG; i++) {
@@ -83,7 +83,7 @@ void m128_epi32_set_result_fromto(int from, int to)
     }
 }
 
-void m128_epi32_set_result_cutoff(int cutoff)
+void m128_epi32_set_expected_cutoff(int cutoff)
 {
-    m128_epi32_set_result_fromto(0, cutoff);
+    m128_epi32_set_expected_fromto(0, cutoff);
 }
