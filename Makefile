@@ -14,8 +14,6 @@ object_dir=obj
 bin_dir=bin
 lib_dir=lib
 
-library_obj:=$(library_obj:%=$(object_dir)/%)
-
 cc=gcc
 ccflags=-fPIC -march=native -I$(include_dir) -DCONTIGUOUS_LOOP
 ldflags=-shared
