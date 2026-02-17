@@ -3,6 +3,8 @@
 # Path for the intrinsics library against which we need to link.
 libintrinsics_utils_path=${HOME}/repos/intrinsics_utils/lib
 
+# Check to make sure the shared library we are testing is in the
+# LD_LIBRARY_PATH. If not, add it in.
 if [[ -z "$LD_LIBRARY_PATH" ]];
 then
     echo "LD_LIBRARY_PATH is empty, setting LD_LIBARY_PATH to $libintrinsics_utils_path"
