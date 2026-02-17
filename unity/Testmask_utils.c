@@ -55,14 +55,19 @@ void test_mm_set_mask_epi32(void)
     __m128i result_mask;
     __m128i store_mask = _mm_set1_epi32(INT32_ALLBITS);
 
-    // Set the expected result.
-    m128_epi32_set_expected_cutoff(cutoff);
+    for (int i = 0; i < NUM_RANGES; i++) {
+        // Set the index of the last nonzero element in the mask.
+        cutoff = end_indices[i];
 
-    // Store the actual result.
-    result_mask = _mm_set_mask_epi32(cutoff);
-    _mm_maskstore_epi32(m128_epi32_actual, store_mask, result_mask);
+        // Set the expected result.
+        m128_epi32_set_expected_cutoff(cutoff);
 
-    TEST_ASSERT_EQUAL_INT32_ARRAY(m128_epi32_expected, m128_epi32_actual, INT32_PER_M128_REG);
+        // Store the actual result.
+        result_mask = _mm_set_mask_epi32(cutoff);
+        _mm_maskstore_epi32(m128_epi32_actual, store_mask, result_mask);
+
+        TEST_ASSERT_EQUAL_INT32_ARRAY(m128_epi32_expected, m128_epi32_actual, INT32_PER_M128_REG);
+    }
 }
 
 void m128_epi32_set_expected_fromto(int from, int to)
