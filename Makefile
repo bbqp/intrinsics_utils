@@ -15,19 +15,21 @@ LIBMMP=0.0.0
 
 cc=gcc
 ccflags=-fPIC -march=native -I$(include_dir) -DCONTIGUOUS_LOOP
-ldflags=-shared -Wl,-soname,${SONAME}.so.${SOMMP}
+ldflags=-shared -Wl,-soname,${SONAME}.so.${SOMMP} --verbose
 
-src_dir=src
-include_dir=include
-object_dir=obj
-bin_dir=bin
-lib_dir=lib
+src_dir=$(PWD)/src/
+include_dir=$(PWD)/include/
+object_dir=$(PWD)/obj/
+bin_dir=$(PWD)/bin/
+lib_dir=$(PWD)/lib/
 
 src_files=$(wildcard $(src_dir)/*.c)
 obj_files=$(patsubst $(src_dir)/%.c, $(object_dir)/%.o, $(src_files))
 
 intrinsics_utils: $(object_dir) $(bin_dir) $(lib_dir) $(obj_files)
 	$(cc) $(obj_files) -o $(lib_dir)/${SONAME}.so.${LIBMMP} $(ldflags)
+	ln -s $(lib_dir)/${SONAME}.so.${LIBMMP} $(lib_dir)/${SONAME}.so.${SOMMP}
+	ln -s $(lib_dir)/${SONAME}.so.${SOMMP} $(lib_dir)/${SONAME}.so
 
 $(object_dir)/intrinsics_utils.o: $(src_dir)/intrinsics_utils.c $(include_dir)/intrinsics_utils.h $(include_dir)/mask_utils.h $(include_dir)/constants.h $(include_dir)/cpu_flags.h
 	$(cc) -c $< $(ccflags) -o $@ 
