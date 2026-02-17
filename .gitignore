@@ -2,3 +2,6 @@
 obj
 lib
 bin
+
+# Ignore subdirectories for unit testing.
+unity/build
