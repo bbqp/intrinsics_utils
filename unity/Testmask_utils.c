@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
 {
     UNITY_BEGIN();
 
+    RUN_TEST(test_mm_set_mask_fromto_epi32);
+    RUN_TEST(test_mm_set_mask_epi32);
+
     return UNITY_END();
 }
 
