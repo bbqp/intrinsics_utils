@@ -2,26 +2,22 @@
 # for C.
 
 # Begin by detecting the operating system.
-ifeq ($(OSTYPE),cygwin)
-	CLEANUP=rm -f
-	MKDIR=mkdir -p
-	TARGET_EXTENSION=out
-else ifeq ($(OS),Windows_NT)
-	CLEANUP=del /F /Q
-	MKDIR=mkdir
-	TARGET_EXTENSION=exe
-else
-	CLEANUP=rm -f
-	MKDIR=mkdir -p
-	TARGET_EXTENSION=out
-endif
+CLEANUP=rm -f
+MKDIR=mkdir -p
+TARGET_EXTENSION=out
 
 # Point to the Unity source, as well as the source, include, and shared
 # library paths for this repo.
-PATHU=$(HOME)/repos/Unity/src/
-PATHS=$(HOME)/repos/intrinsics_utils/src/
-PATHI=$(HOME)/repos/intrinsics_utils/include/
-PATHL=$(HOME)/repos/intrinsics_utils/lib/
+ifeq ($(OS),Windows_NT)
+	BASEPATH=c/Users/$(USER)/
+else
+	BASEPATH=$(HOME)/repos/
+endif
+
+PATHU=$(BASEPATH)/Unity/src/
+PATHS=$(BASEPATH)/intrinsics_utils/src/
+PATHI=$(BASEPATH)/intrinsics_utils/include/
+PATHL=$(BASEPATH)/intrinsics_utils/lib/
 
 # Paths needed for test source, build, dependencies, object files, and test
 # results.
