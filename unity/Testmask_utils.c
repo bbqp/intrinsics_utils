@@ -4,10 +4,16 @@
 #include "constants.h"
 #include <immintrin.h>
 
-#define NUM_RANGES (INT32_PER_M128_REG + 2)
+#ifdef SUPPORTS_AVX512
+#define BUFFER_SIZE INT32_PER_M512_REG
+#else
+#define BUFFER_SIZE INT32_PER_M256_REG
+#endif
 
-static int m128_epi32_expected[INT32_PER_M128_REG];
-static int m128_epi32_actual[INT32_PER_M128_REG];
+#define NUM_RANGES (BUFFER_SIZE + 2)
+
+static int m128_epi32_expected[BUFFER_SIZE];
+static int m128_epi32_actual[BUFFER_SIZE];
 static int start_indices[NUM_RANGES];
 static int end_indices[NUM_RANGES];
 
