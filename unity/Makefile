@@ -9,7 +9,7 @@ TARGET_EXTENSION=out
 # Point to the Unity source, as well as the source, include, and shared
 # library paths for this repo.
 ifeq ($(OS),Windows_NT)
-	BASEPATH=c/Users/$(USER)/
+	BASEPATH=/c/Users/$(USER)/
 else
 	BASEPATH=$(HOME)/repos/
 endif
