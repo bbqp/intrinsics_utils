@@ -3,6 +3,7 @@
 #include "cpu_flags.h"
 #include "constants.h"
 #include <immintrin.h>
+#include <stdio.h>
 
 #ifdef SUPPORTS_AVX512
 #define MAX_BUFFER_SIZE INT32_PER_M512_REG
@@ -97,13 +98,54 @@ void setUp(void)
 #endif
 }
 
-void tearDown(void) {}
-
-
+void tearDown(void)
+{
+    // Nothing to do here since nothing is allocated on the heap.
+}
 
 void test_mm_set_mask_fromto_epi32(void)
 {
-    TEST_IGNORE();
+    int start, end;
+    __m128i result_mask;
+    __m128i store_mask = _mm_set1_epi32(INT32_ALLBITS);
+
+    // Test results where the ending index is greater than or equal to the starting index.
+    for (int i = 0; i < M128_INDICES_LEN; i++) {
+        start = m128_indices[i];
+
+        for (int j = i; j < M128_INDICES_LEN; j++) {
+            end = m128_indices[j];
+
+            // Set the expected result.
+            m128_epi32_set_expected_fromto(start, end);
+
+            // Store the actual result.
+            result_mask = _mm_setmask_fromto_epi32(start, end);
+            _mm_maskstore_epi32(epi32_actual, store_mask, result_mask);
+
+            printf("start: %2d\tend: %2d\n", start, end);
+            TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M128_REG);
+        }
+    }
+
+    // Test results where the ending index is less than the starting index.
+    for (int i = 0; i < M128_INDICES_LEN; i++) {
+        start = m128_indices[i];
+
+        for (int j = i - 1; j >= 0; j--) {
+            end = m128_indices[j];
+
+            // Set the expected result.
+            m128_epi32_set_expected_fromto(start, end);
+
+            // Store the actual result.
+            result_mask = _mm_setmask_fromto_epi32(start, end);
+            _mm_maskstore_epi32(epi32_actual, store_mask, result_mask);
+
+            printf("start: %2d\tend: %2d\n", start, end);
+            TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M128_REG);
+        }
+    }
 }
 
 void test_mm_set_mask_epi32(void)
@@ -133,11 +175,15 @@ void test_mm_set_mask_epi32(void)
 
 void m128_epi32_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
+    if (from > to || from > INT32_PER_M128_REG - 1 || to < 0) {
         for (int i = 0; i < INT32_PER_M128_REG; i++) {
             epi32_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT32_PER_M128_REG; i++) {
+            epi32_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
@@ -159,11 +205,15 @@ void m128_epi32_set_expected_to(int cutoff)
 
 void m128_epi64_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
+    if (from > to || from > INT64_PER_M128_REG || to < 0) {
         for (int i = 0; i < INT64_PER_M128_REG; i++) {
             epi64_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT64_PER_M128_REG; i++) {
+            epi64_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
@@ -207,11 +257,15 @@ void m128_pd_set_expected_to(int cutoff)
 
 void m256_epi32_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
+    if (from > to || from > INT32_PER_M256_REG - 1 || to < 0) {
         for (int i = 0; i < INT32_PER_M256_REG; i++) {
             epi32_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT32_PER_M256_REG; i++) {
+            epi32_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
@@ -233,11 +287,15 @@ void m256_epi32_set_expected_to(int cutoff)
 
 void m256_epi64_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
+    if (from > to || from > INT64_PER_M256_REG - 1 || to < 0) {
         for (int i = 0; i < INT64_PER_M256_REG; i++) {
             epi64_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT64_PER_M256_REG; i++) {
+            epi64_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
@@ -278,11 +336,15 @@ void m256_pd_set_expected_to(int cutoff)
 #ifdef SUPPORTS_AVX512
 void m512_epi32_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
-        for (int i = 0; i < INT32_PER_M256_REG; i++) {
+    if (from > to || from > INT32_PER_M512_REG - 1 || to < 0) {
+        for (int i = 0; i < INT32_PER_M512_REG; i++) {
             epi32_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT32_PER_M512_REG; i++) {
+            epi32_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
@@ -304,11 +366,15 @@ void m512_epi32_set_expected_to(int cutoff)
 
 void m512_epi64_set_expected_fromto(int from, int to)
 {
-    if (from > to) {
+    if (from > to || from > INT64_PER_M512_REG - 1 || to < 0) {
         for (int i = 0; i < INT64_PER_M512_REG; i++) {
             epi64_expected[i] = 0;
         }
     } else {
+        for (int i = 0; i < INT64_PER_M512_REG; i++) {
+            epi64_expected[i] = 0;
+        }
+ 
         if (from < 0) {
             from = 0;
         }
