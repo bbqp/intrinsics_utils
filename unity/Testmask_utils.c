@@ -3,7 +3,6 @@
 #include "cpu_flags.h"
 #include "constants.h"
 #include <immintrin.h>
-#include <stdio.h>
 
 #ifdef SUPPORTS_AVX512
 #define MAX_BUFFER_SIZE INT32_PER_M512_REG
@@ -123,7 +122,6 @@ void test_mm_set_mask_fromto_epi32(void)
             result_mask = _mm_setmask_fromto_epi32(start, end);
             _mm_maskstore_epi32(epi32_actual, store_mask, result_mask);
 
-            printf("start: %2d\tend: %2d\n", start, end);
             TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M128_REG);
         }
     }
@@ -142,7 +140,6 @@ void test_mm_set_mask_fromto_epi32(void)
             result_mask = _mm_setmask_fromto_epi32(start, end);
             _mm_maskstore_epi32(epi32_actual, store_mask, result_mask);
 
-            printf("start: %2d\tend: %2d\n", start, end);
             TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M128_REG);
         }
     }
