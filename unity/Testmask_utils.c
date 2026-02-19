@@ -14,6 +14,10 @@
 #define M256_INDICES_LEN (INT32_PER_M256_REG + 2)
 #define M512_INDICES_LEN (INT32_PER_M512_REG + 2)
 
+#define M128_64BIT_INDICES_LEN (INT64_PER_M128_REG + 2)
+#define M256_64BIT_INDICES_LEN (INT64_PER_M256_REG + 2)
+#define M512_64BIT_INDICES_LEN (INT64_PER_M512_REG + 2)
+
 // This is a little annoying, but using int64_t, __int64_t, and int_least64_t
 // (aliases for long int) are insufficient for the arguments needed for
 // certain integer-related intrinsics which require a pointer to type __int64,
@@ -47,6 +51,8 @@ void tearDown(void);
 // Functions for 
 void test_mm_set_mask_fromto_epi32(void);
 void test_mm_set_mask_epi32(void);
+void test_mm_set_mask_fromto_epi64(void);
+void test_mm_set_mask_epi64(void);
 
 // Functions for setting expected mask results in XMM registers.
 void m128_epi32_set_expected_fromto(int, int);
@@ -76,6 +82,7 @@ int main(int argc, char *argv[])
 
     RUN_TEST(test_mm_set_mask_fromto_epi32);
     RUN_TEST(test_mm_set_mask_epi32);
+    RUN_TEST(test_mm_set_mask_epi64);
 
     return UNITY_END();
 }
@@ -163,6 +170,32 @@ void test_mm_set_mask_epi32(void)
         _mm_maskstore_epi32(epi32_actual, store_mask, result_mask);
 
         TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M128_REG);
+    }
+}
+
+void test_mm_set_mask_fromto_epi64(void)
+{
+    TEST_IGNORE();
+}
+
+void test_mm_set_mask_epi64(void)
+{
+    int cutoff;
+    __m128i result_mask;
+    __m128i store_mask = _mm_set1_epi64x(INT64_ALLBITS);
+
+    for (int i = 0; i < M128_64BIT_INDICES_LEN; i++) {
+        // Set the index of the last nonzero element in the mask.
+        cutoff = m128_indices[i];
+
+        // Set the expected result.
+        m128_epi64_set_expected_to(cutoff);
+
+        // Store the actual result.
+        result_mask = _mm_set_mask_epi64(cutoff);
+        _mm_maskstore_epi64(epi64_actual, store_mask, result_mask);
+
+        TEST_ASSERT_EQUAL_INT64_ARRAY(epi64_expected, epi64_actual, INT32_PER_M128_REG);
     }
 }
 
