@@ -2,7 +2,6 @@
 #include "constants.h"
 #include <immintrin.h>
 
-
 //----------------------------------------------------------------------------
 // MMX/SSE*-compatible functions for creating integer, single, and double
 // masks.
@@ -12,7 +11,7 @@ __m128i _mm_setmask_fromto_epi32(int from, int to)
 {
 	__m128i mask;
 
-	if (from > to || from > INT32_PER_M128_REG - 1) {
+	if (from > to || from > INT32_PER_M128_REG - 1 || to < 0) {
 		mask = _mm_set1_epi32(0);
 	} else {
         if (from < 0) {
@@ -72,7 +71,7 @@ __m128i _mm_setmask_fromto_epi64(int from, int to)
 {
 	__m128i mask;
 
-	if (from > to || from > INT64_PER_M128_REG - 1) {
+	if (from > to || from > INT64_PER_M128_REG - 1 || to < 0) {
 		mask = _mm_set1_epi64x(0);
 	} else {
         if (from < 0) {
@@ -134,7 +133,7 @@ __m256i _mm256_setmask_fromto_epi32(int from, int to)
 {
 	__m256i mask;
 
-	if (from > to || from > INT32_PER_M256_REG - 1) {
+	if (from > to || from > INT32_PER_M256_REG - 1 || to < 0) {
 		mask = _mm256_set1_epi32(0);
 	} else {
         if (from < 0) {
@@ -284,7 +283,7 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 {
 	__m256i mask;
 
-	if (from > to || from > INT64_PER_M256_REG - 1) {
+	if (from > to || from > INT64_PER_M256_REG - 1 || to < 0) {
 		mask = _mm256_set1_epi64x(0);
 	} else {
         if (from < 0) {
@@ -374,7 +373,7 @@ __mmask16 _mm512_setmask_fromto_epi32(int from, int to)
     __mmask16 lmask;
     __mmask16 rmask;
 
-	if (from > to || from > INT32_PER_M512_REG - 1) {
+	if (from > to || from > INT32_PER_M512_REG - 1 || to < 0) {
 		mask = _mm512_movepi32_mask(_mm512_set1_epi32(0));
 	} else {
 		mask = _mm512_movepi32_mask(_mm512_set1_epi32(INT32_ALLBITS));
@@ -499,7 +498,7 @@ __mmask8 _mm512_setmask_fromto_epi64(int from, int to)
     __mmask8 lmask; 
     __mmask8 rmask; 
 
-	if (from > to || from > INT64_PER_M256_REG - 1) {
+	if (from > to || from > INT64_PER_M512_REG - 1 || to < 0) {
 		mask = _mm512_movepi64_mask(_mm512_set1_epi64(0));
 	} else {
 		mask = _mm512_movepi64_mask(_mm512_set1_epi32(INT64_ALLBITS));
