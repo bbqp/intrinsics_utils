@@ -43,7 +43,7 @@ void _mm256_dset_value(double *x, int n, double value)
 	}
 }
 
-#ifdef SUPPORTS_AV512
+#ifdef SUPPORTS_AVX512
 void _mm512_sset_value(float *x, int n, float value)
 {
 	int k;
@@ -65,7 +65,7 @@ void _mm512_dset_value(double *x, int n, double value)
 {
 	int k;
 	int cutoff = n % FLOAT_PER_M512_REG;
-	__m512d vreg = _mm512_set1_ps(value);
+	__m512d vreg = _mm512_set1_pd(value);
 	__mmask8 mask;
 
 	if (cutoff > 0) {
@@ -300,7 +300,7 @@ double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *
 }
 
 
-#ifdef SUPPORTS_AV512
+#ifdef SUPPORTS_AVX512
 float _mm512_fdot(const float *x, const float *y, int n)
 {
 	__m512 xreg;
@@ -408,7 +408,7 @@ double _mm512_ddot(const double *x, const double *y, int n)
 	__m512d xreg;
 	__m512d yreg;
 	__m512d preg;
-	__m512d sreg = _mm512_set1_ps(0);
+	__m512d sreg = _mm512_set1_pd(0);
 	__mmask8 mask;
 
 	int i;
