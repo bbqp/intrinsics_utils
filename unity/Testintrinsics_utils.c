@@ -24,7 +24,11 @@ int main(int argc, char *argv[])
     return UNITY_END();
 }
 
-void setUp(void) {}
+void setUp(void)
+{
+    srand(0);
+}
+
 void tearDown(void) {}
 
 void random_array(float *x, int len, float a, float b)
