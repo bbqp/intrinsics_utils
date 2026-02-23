@@ -54,6 +54,9 @@ void test_mm_set_mask_epi32(void);
 void test_mm_set_mask_fromto_epi64(void);
 void test_mm_set_mask_epi64(void);
 
+
+void test_mm256_set_mask_epi32(void);
+
 // Functions for setting expected mask results in XMM registers.
 void m128_epi32_set_expected_fromto(int, int);
 void m128_epi32_set_expected_to(int);
@@ -83,6 +86,7 @@ int main(int argc, char *argv[])
     RUN_TEST(test_mm_set_mask_fromto_epi32);
     RUN_TEST(test_mm_set_mask_epi32);
     RUN_TEST(test_mm_set_mask_epi64);
+    RUN_TEST(test_mm256_set_mask_epi32);
 
     return UNITY_END();
 }
@@ -198,6 +202,29 @@ void test_mm_set_mask_epi64(void)
         TEST_ASSERT_EQUAL_INT64_ARRAY(epi64_expected, epi64_actual, INT32_PER_M128_REG);
     }
 }
+
+void test_mm256_set_mask_epi32(void)
+{
+    int cutoff;
+    __m256i result_mask;
+    __m256i store_mask = _mm256_set1_epi32(INT32_ALLBITS);
+
+    for (int i = 0; i < M256_INDICES_LEN; i++) {
+        // Set the index of the last nonzero element in the mask.
+        cutoff = m256_indices[i];
+
+        // Set the expected result.
+        m256_epi32_set_expected_to(cutoff);
+
+        // Store the actual result.
+        result_mask = _mm256_set_mask_epi32(cutoff);
+        _mm256_maskstore_epi32(epi32_actual, store_mask, result_mask);
+
+        TEST_ASSERT_EQUAL_INT32_ARRAY(epi32_expected, epi32_actual, INT32_PER_M256_REG);
+    }
+}
+
+
 
 //----------------------------------------------------------------------------
 // Functions for setting expected mask results in XMM registers.
