@@ -454,11 +454,11 @@ double _mm_register_sum_pd(__m128d vreg)
 
 float _mm256_register_sum_ps(__m256 vreg)
 {
-	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
+	__m256i idx = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
 
 	vreg = _mm256_hadd_ps(vreg, vreg);
-	vreg = _mm256_permutevar8x32_ps(vreg, idx);
 	vreg = _mm256_hadd_ps(vreg, vreg);
+	vreg = _mm256_permutevar8x32_ps(vreg, idx);
 	vreg = _mm256_hadd_ps(vreg, vreg);
 
 	return _mm256_cvtss_f32(vreg);
@@ -507,16 +507,16 @@ float _mm512_register_sum_ps(__m512 vreg)
 {
     __m256 vlo = _mm512_extractf32x8_ps(vreg, 0);
     __m256 vhi = _mm512_extractf32x8_ps(vreg, 1);
-	__m256i idx = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
+	__m256i idx = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
 
 	vlo = _mm256_hadd_ps(vlo, vlo);
 	vhi = _mm256_hadd_ps(vhi, vhi);
 
-	vlo = _mm256_permutevar8x32_ps(vlo, idx);
-	vhi = _mm256_permutevar8x32_ps(vhi, idx);
-
     vlo = _mm256_hadd_ps(vlo, vlo);
     vhi = _mm256_hadd_ps(vhi, vhi);
+
+	vlo = _mm256_permutevar8x32_ps(vlo, idx);
+	vhi = _mm256_permutevar8x32_ps(vhi, idx);
 
     vlo = _mm256_hadd_ps(vlo, vlo);
     vhi = _mm256_hadd_ps(vhi, vhi); 
