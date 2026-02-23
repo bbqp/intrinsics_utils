@@ -1,5 +1,7 @@
-#include "mask_utils.h"
+
+#include "cpu_flags.h"
 #include "constants.h"
+#include "mask_utils.h"
 #include <immintrin.h>
 
 //----------------------------------------------------------------------------
