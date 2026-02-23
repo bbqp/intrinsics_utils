@@ -107,24 +107,24 @@ __m128i _mm_setmask_fromto_epi64(int from, int to)
 	return mask;
 }
 
-__m128i _mm_set_mask_epi32(int cutoff)
+__m128i _mm_set_mask_epi32(int cutoff_index_index)
 {
-	return _mm_setmask_fromto_epi32(0, cutoff);
+	return _mm_setmask_fromto_epi32(0, cutoff_index_index);
 }
 
-__m128i _mm_set_mask_epi64(int cutoff)
+__m128i _mm_set_mask_epi64(int cutoff_index)
 {
-	return _mm_setmask_fromto_epi64(0, cutoff);
+	return _mm_setmask_fromto_epi64(0, cutoff_index);
 }
 
-__m128 _mm_set_mask_ps(int cutoff)
+__m128 _mm_set_mask_ps(int cutoff_index)
 {
-	return _mm_castsi128_ps(_mm_set_mask_epi32(cutoff));
+	return _mm_castsi128_ps(_mm_set_mask_epi32(cutoff_index));
 }
 
-__m128d _mm_set_mask_pd(int cutoff)
+__m128d _mm_set_mask_pd(int cutoff_index)
 {
-	return _mm_castsi128_pd(_mm_set_mask_epi64(cutoff));
+	return _mm_castsi128_pd(_mm_set_mask_epi64(cutoff_index));
 }
 
 //----------------------------------------------------------------------------
@@ -348,24 +348,24 @@ __m256i _mm256_setmask_fromto_epi64(int from, int to)
 	return mask;
 }
 
-__m256i _mm256_set_mask_epi32(int cutoff)
+__m256i _mm256_set_mask_epi32(int cutoff_index)
 {	
-	return _mm256_setmask_fromto_epi32(0, cutoff);
+	return _mm256_setmask_fromto_epi32(0, cutoff_index);
 }
 
-__m256i _mm256_set_mask_epi64(int cutoff)
+__m256i _mm256_set_mask_epi64(int cutoff_index)
 {
-	return _mm256_setmask_fromto_epi64(0, cutoff);
+	return _mm256_setmask_fromto_epi64(0, cutoff_index);
 }
 
-__m256 _mm256_set_mask_ps(int cutoff)
+__m256 _mm256_set_mask_ps(int cutoff_index)
 {
-	return _mm256_castsi256_ps(_mm256_set_mask_epi32(cutoff));
+	return _mm256_castsi256_ps(_mm256_set_mask_epi32(cutoff_index));
 }
 
-__m256d _mm256_set_mask_pd(int cutoff)
+__m256d _mm256_set_mask_pd(int cutoff_index)
 {
-	return _mm256_castsi256_pd(_mm256_set_mask_epi64(cutoff));
+	return _mm256_castsi256_pd(_mm256_set_mask_epi64(cutoff_index));
 }
 
 #ifdef SUPPORTS_AVX512
@@ -390,102 +390,102 @@ __mmask16 _mm512_setmask_fromto_epi32(int from, int to)
 
         switch (from) {
             case 0:
-                rmask = _kshiftri_mask16(mask, 0);
+                rmask = _kshiftli_mask16(mask, 0);
                 break;
             case 1:
-                rmask = _kshiftri_mask16(mask, 1);
+                rmask = _kshiftli_mask16(mask, 1);
                 break;
             case 2:
-                rmask = _kshiftri_mask16(mask, 2);
+                rmask = _kshiftli_mask16(mask, 2);
                 break;
             case 3:
-                rmask = _kshiftri_mask16(mask, 3);
+                rmask = _kshiftli_mask16(mask, 3);
                 break;
             case 4:
-                rmask = _kshiftri_mask16(mask, 4);
+                rmask = _kshiftli_mask16(mask, 4);
                 break;
             case 5:
-                rmask = _kshiftri_mask16(mask, 5);
+                rmask = _kshiftli_mask16(mask, 5);
                 break;
             case 6:
-                rmask = _kshiftri_mask16(mask, 6);
+                rmask = _kshiftli_mask16(mask, 6);
                 break;
             case 7:
-                rmask = _kshiftri_mask16(mask, 7);
+                rmask = _kshiftli_mask16(mask, 7);
                 break;
             case 8:
-                rmask = _kshiftri_mask16(mask, 8);
+                rmask = _kshiftli_mask16(mask, 8);
                 break;
             case 9:
-                rmask = _kshiftri_mask16(mask, 9);
+                rmask = _kshiftli_mask16(mask, 9);
                 break;
             case 10:
-                rmask = _kshiftri_mask16(mask, 10);
+                rmask = _kshiftli_mask16(mask, 10);
                 break;
             case 11:
-                rmask = _kshiftri_mask16(mask, 11);
+                rmask = _kshiftli_mask16(mask, 11);
                 break;
             case 12:
-                rmask = _kshiftri_mask16(mask, 12);
+                rmask = _kshiftli_mask16(mask, 12);
                 break;
             case 13:
-                rmask = _kshiftri_mask16(mask, 13);
+                rmask = _kshiftli_mask16(mask, 13);
                 break;
             case 14:
-                rmask = _kshiftri_mask16(mask, 14);
+                rmask = _kshiftli_mask16(mask, 14);
                 break;
             case 15:
-                rmask = _kshiftri_mask16(mask, 15);
+                rmask = _kshiftli_mask16(mask, 15);
         }
 
         switch(to) {
             case 0:
-                lmask = _kshiftli_mask16(mask, 15);
+                lmask = _kshiftri_mask16(mask, 15);
                 break;
             case 1:
-                lmask = _kshiftli_mask16(mask, 14);
+                lmask = _kshiftri_mask16(mask, 14);
                 break;
             case 2:
-                lmask = _kshiftli_mask16(mask, 13);
+                lmask = _kshiftri_mask16(mask, 13);
                 break;
             case 3:
-                lmask = _kshiftli_mask16(mask, 12);
+                lmask = _kshiftri_mask16(mask, 12);
                 break;
             case 4:
-                lmask = _kshiftli_mask16(mask, 11);
+                lmask = _kshiftri_mask16(mask, 11);
                 break;
             case 5:
-                lmask = _kshiftli_mask16(mask, 10);
+                lmask = _kshiftri_mask16(mask, 10);
                 break;
             case 6:
-                lmask = _kshiftli_mask16(mask, 9);
+                lmask = _kshiftri_mask16(mask, 9);
                 break;
             case 7:
-                lmask = _kshiftli_mask16(mask, 8);
+                lmask = _kshiftri_mask16(mask, 8);
                 break;
             case 8:
-                lmask = _kshiftli_mask16(mask, 7);
+                lmask = _kshiftri_mask16(mask, 7);
                 break;
             case 9:
-                lmask = _kshiftli_mask16(mask, 6);
+                lmask = _kshiftri_mask16(mask, 6);
                 break;
             case 10:
-                lmask = _kshiftli_mask16(mask, 5);
+                lmask = _kshiftri_mask16(mask, 5);
                 break;
             case 11:
-                lmask = _kshiftli_mask16(mask, 4);
+                lmask = _kshiftri_mask16(mask, 4);
                 break;
             case 12:
-                lmask = _kshiftli_mask16(mask, 3);
+                lmask = _kshiftri_mask16(mask, 3);
                 break;
             case 13:
-                lmask = _kshiftli_mask16(mask, 2);
+                lmask = _kshiftri_mask16(mask, 2);
                 break;
             case 14:
-                lmask = _kshiftli_mask16(mask, 1);
+                lmask = _kshiftri_mask16(mask, 1);
                 break;
             case 15:
-                lmask = _kshiftli_mask16(mask, 0);
+                lmask = _kshiftri_mask16(mask, 0);
         }
 
         mask = _kand_mask16(lmask, rmask);     
@@ -503,7 +503,7 @@ __mmask8 _mm512_setmask_fromto_epi64(int from, int to)
 	if (from > to || from > INT64_PER_M512_REG - 1 || to < 0) {
 		mask = _mm512_movepi64_mask(_mm512_set1_epi64(0));
 	} else {
-		mask = _mm512_movepi64_mask(_mm512_set1_epi32(INT64_ALLBITS));
+		mask = _mm512_movepi64_mask(_mm512_set1_epi64(INT64_ALLBITS));
 
         if (from < 0 ) {
             from = 0;
@@ -515,54 +515,54 @@ __mmask8 _mm512_setmask_fromto_epi64(int from, int to)
 
         switch (from) {
             case 0:
-                rmask = _kshiftri_mask8(mask, 0);
+                rmask = _kshiftli_mask8(mask, 0);
                 break;
             case 1:
-                rmask = _kshiftri_mask8(mask, 1);
+                rmask = _kshiftli_mask8(mask, 1);
                 break;
             case 2:
-                rmask = _kshiftri_mask8(mask, 2);
+                rmask = _kshiftli_mask8(mask, 2);
                 break;
             case 3:
-                rmask = _kshiftri_mask8(mask, 3);
+                rmask = _kshiftli_mask8(mask, 3);
                 break;
             case 4:
-                rmask = _kshiftri_mask8(mask, 4);
+                rmask = _kshiftli_mask8(mask, 4);
                 break;
             case 5:
-                rmask = _kshiftri_mask8(mask, 5);
+                rmask = _kshiftli_mask8(mask, 5);
                 break;
             case 6:
-                rmask = _kshiftri_mask8(mask, 6);
+                rmask = _kshiftli_mask8(mask, 6);
                 break;
             case 7:
-                rmask = _kshiftri_mask8(mask, 7);
+                rmask = _kshiftli_mask8(mask, 7);
         }
 
         switch (to) {
             case 0:
-                rmask = _kshiftli_mask8(mask, 7);
+                rmask = _kshiftri_mask8(mask, 7);
                 break;
             case 1:
-                rmask = _kshiftli_mask8(mask, 6);
+                rmask = _kshiftri_mask8(mask, 6);
                 break;
             case 2:
-                rmask = _kshiftli_mask8(mask, 5);
+                rmask = _kshiftri_mask8(mask, 5);
                 break;
             case 3:
-                rmask = _kshiftli_mask8(mask, 4);
+                rmask = _kshiftri_mask8(mask, 4);
                 break;
             case 4:
-                rmask = _kshiftli_mask8(mask, 3);
+                rmask = _kshiftri_mask8(mask, 3);
                 break;
             case 5:
-                rmask = _kshiftli_mask8(mask, 2);
+                rmask = _kshiftri_mask8(mask, 2);
                 break;
             case 6:
-                rmask = _kshiftli_mask8(mask, 1);
+                rmask = _kshiftri_mask8(mask, 1);
                 break;
             case 7:
-                rmask = _kshiftli_mask8(mask, 0);
+                rmask = _kshiftri_mask8(mask, 0);
         }
 
         mask = _kand_mask8(lmask, rmask);
@@ -571,13 +571,13 @@ __mmask8 _mm512_setmask_fromto_epi64(int from, int to)
 	return mask; 
 }
 
-__mmask16 _mm512_set_mask_epi32(int cutoff)
+__mmask16 _mm512_set_mask_epi32(int cutoff_index)
 {
-    return _mm512_setmask_fromto_epi32(0, cutoff);
+    return _mm512_setmask_fromto_epi32(0, cutoff_index);
 }
 
-__mmask8 _mm512_set_mask_epi64(int cutoff)
+__mmask8 _mm512_set_mask_epi64(int cutoff_index)
 {
-    return _mm512_setmask_fromto_epi64(0, cutoff);
+    return _mm512_setmask_fromto_epi64(0, cutoff_index);
 }
 #endif
