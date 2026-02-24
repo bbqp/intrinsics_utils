@@ -17,7 +17,7 @@ void _mm256_sset_value(float *x, int n, float value)
 	__m256i mask;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi32(cutoff);
+		mask = _mm256_set_mask_epi32(cutoff - 1);
 		_mm256_maskstore_ps(x, mask, vreg);
 	}
 
@@ -34,7 +34,7 @@ void _mm256_dset_value(double *x, int n, double value)
 	__m256i mask;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi64(cutoff);
+		mask = _mm256_set_mask_epi64(cutoff - 1);
 		_mm256_maskstore_pd(x, mask, vreg);
 	}
 
@@ -52,7 +52,7 @@ void _mm512_sset_value(float *x, int n, float value)
 	__mmask16 mask;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi32(cutoff);
+		mask = _mm512_set_mask_epi32(cutoff - 1);
 		_mm512_mask_storeu_ps(x, mask, vreg);
 	}
 
@@ -69,7 +69,7 @@ void _mm512_dset_value(double *x, int n, double value)
 	__mmask8 mask;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi64(cutoff);
+		mask = _mm512_set_mask_epi64(cutoff - 1);
 		_mm512_mask_storeu_pd(x, mask, vreg);
 	}
 
@@ -94,7 +94,7 @@ float _mm256_fdot(const float *x, const float *y, int n)
 	int cutoff = n % FLOAT_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi32(cutoff);
+		mask = _mm256_set_mask_epi32(cutoff - 1);
 
 		xreg = _mm256_maskload_ps(x, mask);
 		yreg = _mm256_maskload_ps(y, mask);
@@ -124,7 +124,7 @@ float _mm256_fdot_indexed(const float *x, const int *xindices, const float *y, i
 	int cutoff = n % FLOAT_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi32(cutoff);
+		mask = _mm256_set_mask_epi32(cutoff - 1);
 		vindex = _mm256_maskload_epi32(xindices, mask);
 		yreg = _mm256_maskload_ps(y, mask);
 		xreg = _mm256_mask_i32gather_ps(sreg, x, vindex, _mm256_castsi256_ps(mask), 4);
@@ -159,7 +159,7 @@ float _mm256_fdot_indexed2(const float *x, const int *xindices, const float *y, 
 	int cutoff = n % FLOAT_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi32(cutoff);
+		mask = _mm256_set_mask_epi32(cutoff - 1);
 		xindex = _mm256_maskload_epi32(xindices, mask);
 		yindex = _mm256_maskload_epi32(yindices, mask);
 
@@ -197,7 +197,7 @@ double _mm256_ddot(const double *x, const double *y, int n)
 	int cutoff = n % DOUBLE_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi64(cutoff);
+		mask = _mm256_set_mask_epi64(cutoff - 1);
 
 		xreg = _mm256_maskload_pd(x, mask);
 		yreg = _mm256_maskload_pd(y, mask);
@@ -229,9 +229,9 @@ double _mm256_ddot_indexed(const double *x, const int *xindices, const double *y
 	int cutoff = n % DOUBLE_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi64(cutoff);
+		mask = _mm256_set_mask_epi64(cutoff - 1);
 		dmask = _mm256_castsi256_pd(mask);
-		mask128 = _mm_set_mask_epi32(cutoff);
+		mask128 = _mm_set_mask_epi32(cutoff - 1);
 
 		vindex = _mm_maskload_epi32(xindices, mask128);
 		xreg = _mm256_mask_i32gather_pd(sreg, x, vindex, dmask, 8);
@@ -269,9 +269,9 @@ double _mm256_ddot_indexed2(const double *x, const int *xindices, const double *
 	int cutoff = n % DOUBLE_PER_M256_REG;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi64(cutoff);
+		mask = _mm256_set_mask_epi64(cutoff - 1);
 		dmask = _mm256_castsi256_pd(mask);
-		mask128 = _mm_set_mask_epi32(cutoff);
+		mask128 = _mm_set_mask_epi32(cutoff - 1);
 
 		xindex = _mm_maskload_epi32(xindices, mask128);
 		yindex = _mm_maskload_epi32(yindices, mask128);
@@ -313,7 +313,7 @@ float _mm512_fdot(const float *x, const float *y, int n)
 	int cutoff = n % FLOAT_PER_M512_REG;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi32(cutoff);
+		mask = _mm512_set_mask_epi32(cutoff - 1);
 
 		xreg = _mm512_maskz_loadu_ps(mask, x);
 		yreg = _mm512_maskz_loadu_ps(mask, y);
@@ -343,7 +343,7 @@ float _mm512_fdot_indexed(const float *x, const int *xindices, const float *y, i
 	int cutoff = n % FLOAT_PER_M512_REG;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi32(cutoff);
+		mask = _mm512_set_mask_epi32(cutoff - 1);
 		vindex = _mm512_maskz_loadu_epi32(mask, xindices);
 		yreg = _mm512_maskz_loadu_ps(mask, y);
 		xreg = _mm512_mask_i32gather_ps(sreg, mask, vindex, x, 4);
@@ -377,7 +377,7 @@ float _mm512_fdot_indexed2(const float *x, const int *xindices, const float *y, 
 	int cutoff = n % FLOAT_PER_M512_REG;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi32(cutoff);
+		mask = _mm512_set_mask_epi32(cutoff - 1);
 
 		xind = _mm512_maskz_loadu_epi32(mask, xindices);
 		yind = _mm512_maskz_loadu_epi32(mask, yindices);
@@ -415,7 +415,7 @@ double _mm512_ddot(const double *x, const double *y, int n)
 	int cutoff = n % DOUBLE_PER_M512_REG;
 
 	if (cutoff > 0) {
-		mask = _mm512_set_mask_epi64(cutoff);	
+		mask = _mm512_set_mask_epi64(cutoff - 1);
 
 		xreg = _mm512_maskz_loadu_pd(mask, x);
 		yreg = _mm512_maskz_loadu_pd(mask, y);
@@ -831,7 +831,7 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 		jreg = _mm256_set1_epi32(jsidx);
 
 		if (icutoff > 0) {
-			mask = _mm256_set_mask_epi32(icutoff);
+			mask = _mm256_set_mask_epi32(icutoff - 1);
 
 			kreg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(kreg, jreg);
@@ -848,7 +848,7 @@ void _mm256_copy2d_epi32(int *kind, int nrows, const int *iind, const int *jind,
 	}
 #else
 	if (icutoff > 0) {
-		mask = _mm256_set_mask_epi32(icutoff);
+		mask = _mm256_set_mask_epi32(icutoff - 1);
 
 		for (j = 0; j < numj; j++) {
 			jdidx = j * numi;
@@ -886,7 +886,7 @@ void _mm256_copy1d_ps(float *dst, const float *src, int n)
 	__m256 sreg, dreg;
 
 	if (cutoff > 0) {
-		mask = _mm256_set_mask_epi32(cutoff);
+		mask = _mm256_set_mask_epi32(cutoff - 1);
 
 		sreg = _mm256_maskload_ps(src, mask);
 		_mm256_maskstore_ps(dst, mask, sreg);
@@ -914,7 +914,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 		jreg = _mm256_set1_epi32(jsidx);
 
 		if (icutoff > 0) {
-			mask = _mm256_set_mask_epi32(icutoff);
+			mask = _mm256_set_mask_epi32(icutoff - 1);
 
 			ireg = _mm256_maskload_epi32(iind, mask);
 			kreg = _mm256_add_epi32(jreg, ireg);
@@ -941,7 +941,7 @@ void _mm256_copy2d_indexed_ps(float *dst, const float *src, int nrows, const int
 	}
 #else
 	if (icutoff > 0) {
-		mask = _mm256_set_mask_epi32(icutoff);
+		mask = _mm256_set_mask_epi32(icutoff - 1);
 
 		for (j = 0; j < numj; j++) {
 			jdidx = j * numi;
