@@ -34,7 +34,7 @@ SRCT=$(wildcard $(PATHT)*.c)
 
 # Compilation flags needed. Modify these to fit with this repo.
 CC=gcc
-COMPILE=$(CC) -c -march=native
+COMPILE=$(CC) -c -march=native -DUNITY_INCLUDE_DOUBLE
 LINK=$(CC)
 LDFLAGS=-L$(HOME)/repos/intrinsics_utils/lib/ -lintrinsics_utils
 DEPEND=$(CC) -MM -MG -MF
