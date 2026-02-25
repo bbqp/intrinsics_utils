@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <float.h>
 
+#define FLT_DELTA (2e2 * FLT_EPSILON)
+#define DBL_DELTA (2e2 * DBL_EPSILON)
+
+// Global variables for performing dot products.
+float *xf = NULL, *yf = NULL;
+double *xd = NULL, *yd = NULL;
+int *xindices = NULL;
+int *yindices = NULL;
+
+// Array dimensions.
+int m = 10000;
+int n = 10000;
+
+// Random seed for srand call. 
+unsigned random_seed = 0;
+
 // Forward declarations needed to use Unity.
 void setUp(void);
 void tearDown(void);
@@ -25,25 +41,68 @@ double serial_dsum(const double *, int);
 double serial_ddot_kahan(const double *, const double *, int);
 
 // Forward declarations for tests.
-void test_fdots(void);
-void test_ddots(void);
+void test_m256_fdot(void);
+void test_m256_ddot(void);
+
+#ifdef SUPPORTS_AVX512
+void test_m512_fdot(void);
+void test_m512_ddot(void);
+#endif
 
 int main(int argc, char *argv[])
 {
+    if (argc > 1) {
+        m = strtol(argv[1], NULL, 10);
+    }
+
+    if (argc > 2) {
+        n = strtol(argv[2], NULL, 10);
+    }
+
     UNITY_BEGIN();
 
-    RUN_TEST(test_fdots);
-    RUN_TEST(test_ddots);
+    RUN_TEST(test_m256_fdot);
+    RUN_TEST(test_m256_ddot);
+
+#ifdef SUPPORTS_AVX512
+    RUN_TEST(test_m512_fdot);
+    RUN_TEST(test_m512_ddot);
+#endif
 
     return UNITY_END();
 }
 
 void setUp(void)
 {
-    srand(0);
+    xf = calloc(2*m, sizeof(float));
+    xd = calloc(2*m, sizeof(double));
+    xindices = calloc(2*m, sizeof(int));
+    
+    if (xf != NULL && xd != NULL && xindices != NULL) {
+        yf = xf + m;
+        yd = xd + m;
+        yindices = xindices + m;
+
+        set_farray(xf, m, 0.1f);
+        set_farray(yf, m, 1.0f);
+
+        set_darray(xd, m, 0.1f);
+        set_darray(yd, m, 1.0f);
+    } else {
+        tearDown();
+    }
 }
 
-void tearDown(void) {}
+void tearDown(void)
+{
+    free(xf);
+    free(xd);
+    free(xindices);
+
+    xf = yf = NULL;
+    xd = yd = NULL;
+    xindices = yindices = NULL;
+}
 
 void random_farray(float *x, int len, float a, float b)
 {
@@ -165,114 +224,101 @@ double serial_ddot_kahan(const double *x, const double *y, int len)
 // Tests for intrinsics.
 //----------------------------------------------------------------------------
 
-void test_fdots()
+void test_m256_fdot(void)
 {
-    int m = 15, n = 100;
-    float *x = NULL, *y = NULL, *accumulator = NULL;
+    float element = xf[0];
+    float exact_dot = (float)m * element;
+    float serial_dot = serial_fdot(xf, yf, m);
+    float serial_add = serial_fsum(xf, m);
+    float serial_dot_kahan = serial_fdot_kahan(xf, yf, m);
+    float m256_dot = _mm256_fdot(xf, yf, m);
+    float m256_rel_err = (m256_dot - exact_dot) / exact_dot;
 
-    x = calloc(2*m, sizeof(float));
+    TEST_PRINTF("element:                          %f", element);
+    TEST_PRINTF("exact:                            %f", exact_dot);
+    TEST_PRINTF("serial:                           %f", serial_dot);
+    TEST_PRINTF("serial sum:                       %f", serial_add);
+    TEST_PRINTF("serial kahan:                     %f", serial_dot_kahan);
+    TEST_PRINTF("m256:                             %f", m256_dot);
+    TEST_PRINTF("m256 relative error:              %f", m256_rel_err);
 
-    TEST_ASSERT_NOT_NULL(x);
-
-    if (x != NULL) {
-        y = x + m;
-
-        set_farray(x, m, 0.1f);
-        set_farray(y, m, 1.0f);
-
-        float delta;
-        float element = x[0];
-        float exact_dot = (float)m / 10;
-        float serial_dot = serial_fdot(x, y, m);
-        float serial_add = serial_fsum(x, m);
-        float serial_dot_kahan = serial_fdot_kahan(x, y, m);
-        float m256_dot = _mm256_fdot(x, y, m);
-#ifdef SUPPORTS_AVX512
-        float m512_dot = _mm512_fdot(x, y, m);
-#endif
-	    free(x);
-
-        delta = 10 * exact_dot * FLT_EPSILON;
-        if (delta < 0) delta = -delta;
-
-        printf("element:       %f\n", element);
-        printf("exact:         %f\n", exact_dot);
-        printf("serial:        %f\n", serial_dot);
-        printf("serial sum:    %f\n", serial_add);
-        printf("serial kahan:  %f\n", serial_dot_kahan);
-        printf("m256:          %f\n", m256_dot);
-
-#ifdef SUPPORTS_AVX512
-        printf("m512:         %f\n", m512_dot);
-#endif
-
-        TEST_ASSERT_FLOAT_WITHIN(delta, exact_dot, serial_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, exact_dot, serial_dot_kahan);
-        TEST_ASSERT_FLOAT_WITHIN(delta, exact_dot, m256_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, serial_dot, serial_dot_kahan);
-        TEST_ASSERT_FLOAT_WITHIN(delta, serial_dot, m256_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, serial_dot_kahan, m256_dot);
-#ifdef SUPPORTS_AVX512
-        TEST_ASSERT_FLOAT_WITHIN(delta, exact_dot, m512_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, serial_dot, m512_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, serial_dot_kahan, m512_dot);
-        TEST_ASSERT_FLOAT_WITHIN(delta, m256_dot, m512_dot);
-#endif
-    }
+    if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m256_rel_err);
 }
 
-void test_ddots()
+void test_m256_ddot(void)
 {
-    int m = 7, n = 100;
-    double *x = NULL, *y = NULL, *accumulator = NULL;
+    set_darray(xd, m, 0.1);
+    set_darray(yd, m, 1.0);
 
-    x = calloc(2*m, sizeof(double));
+    double element = xd[0];
+    double exact_dot = (double)m * element;
+    double serial_dot = serial_ddot(xd, yd, m);
+    double serial_add = serial_dsum(xd, m);
+    double serial_dot_kahan = serial_ddot_kahan(xd, yd, m);
+    double m256_dot = _mm256_ddot(xd, yd, m);
+    double m256_rel_err = (m256_dot - exact_dot) / exact_dot;
 
-    TEST_ASSERT_NOT_NULL(x);
+    TEST_PRINTF("element:                          %lf", element);
+    TEST_PRINTF("exact:                            %lf", exact_dot);
+    TEST_PRINTF("serial:                           %lf", serial_dot);
+    TEST_PRINTF("serial sum:                       %lf", serial_add);
+    TEST_PRINTF("serial kahan:                     %lf", serial_dot_kahan);
+    TEST_PRINTF("m256:                             %lf", m256_dot);
+    TEST_PRINTF("m256 relative error:              %lf", m256_rel_err);
 
-    if (x != NULL) {
-        y = x + m;
-
-        set_darray(x, m, 0.1);
-        set_darray(y, m, 1.0);
-
-        double delta;
-        double element = x[0];
-        double exact_dot = (double)m / 10;
-        double serial_dot = serial_ddot(x, y, m);
-        double serial_add = serial_dsum(x, m);
-        double serial_dot_kahan = serial_ddot_kahan(x, y, m);
-        double m256_dot = _mm256_ddot(x, y, m);
-#ifdef SUPPORTS_AVX512
-        double m512_dot = _mm512_ddot(x, y, m);
-#endif
-	    free(x);
-
-        delta = 10 * exact_dot * DBL_EPSILON;
-        if (delta < 0) delta = -delta;
-
-        printf("element:       %lf\n", element);
-        printf("exact:         %lf\n", exact_dot);
-        printf("serial:        %lf\n", serial_dot);
-        printf("serial sum:    %lf\n", serial_add);
-        printf("serial kahan:  %lf\n", serial_dot_kahan);
-        printf("m256:          %lf\n", m256_dot);
-
-#ifdef SUPPORTS_AVX512
-        printf("m512:          %lf\n", m512_dot);
-#endif
-
-        TEST_ASSERT_DOUBLE_WITHIN(delta, exact_dot, serial_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, exact_dot, serial_dot_kahan);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, exact_dot, m256_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, serial_dot, serial_dot_kahan);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, serial_dot, m256_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, serial_dot_kahan, m256_dot);
-#ifdef SUPPORTS_AVX512
-        TEST_ASSERT_DOUBLE_WITHIN(delta, exact_dot, m512_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, serial_dot, m512_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, serial_dot_kahan, m512_dot);
-        TEST_ASSERT_DOUBLE_WITHIN(delta, m256_dot, m512_dot);
-#endif
-    }
+    if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
+    TEST_ASSERT_LESS_THAN_DOUBLE(DBL_DELTA, m256_rel_err);
 }
+
+#ifdef SUPPORTS_AVX512
+void test_m512_fdot(void)
+{
+    set_farray(xf, m, 0.1f);
+    set_farray(yf, m, 1.0f);
+
+    float element = xf[0];
+    float exact_dot = (float)m * element;
+    float serial_dot = serial_fdot(xf, yf, m);
+    float serial_add = serial_fsum(xf, m);
+    float serial_dot_kahan = serial_fdot_kahan(xf, yf, m);
+    float m512_dot = _mm512_fdot(xf, yf, m);
+    float m512_rel_err = (m512_dot - exact_dot) / exact_dot;
+
+    TEST_PRINTF("element:                          %f", element);
+    TEST_PRINTF("exact:                            %f", exact_dot);
+    TEST_PRINTF("serial:                           %f", serial_dot);
+    TEST_PRINTF("serial sum:                       %f", serial_add);
+    TEST_PRINTF("serial kahan:                     %f", serial_dot_kahan);
+    TEST_PRINTF("m512:                             %f", m512_dot);
+    TEST_PRINTF("m512 relative error:              %f", m512_rel_err);
+
+    if (m512_rel_err < 0) m512_rel_err = -m512_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m512_rel_err);
+}
+
+void test_m512_ddot(void)
+{
+        set_darray(xd, m, 0.1);
+        set_darray(yd, m, 1.0);
+
+        double element = xd[0];
+        double exact_dot = (double)m * element;
+        double serial_dot = serial_ddot(xd, yd, m);
+        double serial_add = serial_dsum(xd, m);
+        double serial_dot_kahan = serial_ddot_kahan(xd, yd, m);
+        double m512_dot = _mm512_ddot(xd, yd, m);
+        double m512_rel_err = (m512_dot - exact_dot) / exact_dot;
+
+        TEST_PRINTF("element:                          %lf", element);
+        TEST_PRINTF("exact:                            %lf", exact_dot);
+        TEST_PRINTF("serial:                           %lf", serial_dot);
+        TEST_PRINTF("serial sum:                       %lf", serial_add);
+        TEST_PRINTF("serial kahan:                     %lf", serial_dot_kahan);
+        TEST_PRINTF("m512:                             %lf", m512_dot);
+        TEST_PRINTF("m512 relative error:              %lf", m512_rel_err);
+
+        if (m512_rel_err < 0) m512_rel_err = -m512_rel_err;
+        TEST_ASSERT_LESS_THAN_DOUBLE(DBL_DELTA, m512_rel_err);
+}
+#endif
