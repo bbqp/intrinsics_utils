@@ -14,8 +14,8 @@ int *xindices = NULL;
 int *yindices = NULL;
 
 // Array dimensions.
-int m = 10000;
-int n = 10000;
+int m = 1000;
+int n = 1000;
 
 // Random seed for srand call. 
 unsigned random_seed = 0;
@@ -27,6 +27,7 @@ void tearDown(void);
 // Forward declarations for initializing arrays and computing dot products.
 void random_farray(float *, int, float, float);
 void set_farray(float *, int, float);
+void seq_farray(float *, int, float, float);
 void copy_farray(float *, const float *, int);
 float serial_fdot(const float *, const float *, int);
 float serial_fsum(const float *, int);
@@ -35,14 +36,21 @@ float serial_fdot_kahan(const float *, const float *, int);
 // Forward declarations for double precision functions.
 void random_darray(double *, int, double, double);
 void set_darray(double *, int, double);
+void seq_darray(double *, int, double, double);
 void copy_darray(double *, const double *, int);
 double serial_ddot(const double *, const double *, int);
 double serial_dsum(const double *, int);
 double serial_ddot_kahan(const double *, const double *, int);
 
+// Forward declarations fo setting indices.
+void random_index_array(int *, int);
+void seq_index_array(int *, int, int, int);
+
 // Forward declarations for tests.
 void test_m256_fdot(void);
+void test_m256_fdot_indexed(void);
 void test_m256_ddot(void);
+void test_m256_ddot_indexed(void);
 
 #ifdef SUPPORTS_AVX512
 void test_m512_fdot(void);
@@ -59,10 +67,16 @@ int main(int argc, char *argv[])
         n = strtol(argv[2], NULL, 10);
     }
 
+    if (argc > 3) {
+        random_seed = strtoul(argv[3], NULL, 10);
+    }
+
     UNITY_BEGIN();
 
     RUN_TEST(test_m256_fdot);
+    RUN_TEST(test_m256_fdot_indexed);
     RUN_TEST(test_m256_ddot);
+    RUN_TEST(test_m256_ddot_indexed);
 
 #ifdef SUPPORTS_AVX512
     RUN_TEST(test_m512_fdot);
@@ -74,6 +88,8 @@ int main(int argc, char *argv[])
 
 void setUp(void)
 {
+    srand(random_seed);
+
     xf = calloc(2*m, sizeof(float));
     xd = calloc(2*m, sizeof(double));
     xindices = calloc(2*m, sizeof(int));
@@ -82,12 +98,6 @@ void setUp(void)
         yf = xf + m;
         yd = xd + m;
         yindices = xindices + m;
-
-        set_farray(xf, m, 0.1f);
-        set_farray(yf, m, 1.0f);
-
-        set_darray(xd, m, 0.1f);
-        set_darray(yd, m, 1.0f);
     } else {
         tearDown();
     }
@@ -115,6 +125,13 @@ void set_farray(float *x, int len, float value)
 {
     for (int i = 0; i < len; i++) {
         x[i] = value;
+    }
+}
+
+void seq_farray(float *x, int len, float start, float step)
+{
+    for (int i = 0; i < len; i++) {
+        x[i] = start + i * step;
     }
 }
 
@@ -176,6 +193,13 @@ void set_darray(double *x, int len, double value)
     }
 }
 
+void seq_darray(double *x, int len, double start, double step)
+{
+    for (int i = 0; i < len; i++) {
+        x[i] = start + i * step;
+    }
+}
+
 void copy_darray(double *dst, const double *src, int len)
 {
     for (int i = 0; i < len; i++) {
@@ -220,12 +244,43 @@ double serial_ddot_kahan(const double *x, const double *y, int len)
     return sum;
 }
 
+// Functions for setting array indices.
+void random_index_array(int *indices, int len)
+{
+    int j;
+    int temp;
+
+    // Use the first loop to populate the array.
+    seq_index_array(indices, len, 0, 1);
+
+    // Use the modernized implementation of the Fischer-Yates algorithm.
+    for (int i = len - 1; i >= 0; i--) {
+        j = rand() % (i + 1);
+
+        if (i != j) {
+            temp = indices[i];
+            indices[i] = indices[j];
+            indices[j] = temp;
+        } 
+    }
+}
+
+void seq_index_array(int *indices, int len, int start, int step)
+{
+    for (int i = 0; i < len; i++) {
+        indices[i] = start + i * step;
+    }
+}
+
 //----------------------------------------------------------------------------
 // Tests for intrinsics.
 //----------------------------------------------------------------------------
 
 void test_m256_fdot(void)
 {
+    set_farray(xf, m, 0.1f);
+    set_farray(yf, m, 1.0f);
+
     float element = xf[0];
     float exact_dot = (float)m * element;
     float serial_dot = serial_fdot(xf, yf, m);
@@ -244,6 +299,40 @@ void test_m256_fdot(void)
 
     if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
     TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m256_rel_err);
+}
+
+void test_m256_fdot_indexed(void)
+{
+    int seq_len = 20;
+
+    seq_farray(xf, seq_len, 1.0f, 1.0f);
+    set_farray(yf, seq_len, 1.0f);
+    random_index_array(xindices, seq_len);
+
+    float exact_dot = (float)((seq_len * (seq_len + 1)) / 2);
+    float serial_dot = serial_fdot(xf, yf, seq_len);
+    float serial_add = serial_fsum(xf, seq_len);
+    float serial_dot_kahan = serial_fdot_kahan(xf, yf, seq_len);
+    float m256_dot = _mm256_fdot(xf, yf, seq_len);
+    float m256_dot_idx = _mm256_fdot_indexed(xf, xindices, yf, seq_len);
+    float m256_rel_err = (m256_dot_idx - exact_dot) / exact_dot;
+
+    printf("Randomized Indices: ");
+    for (int i = 0; i < seq_len; i++) {
+        printf("%d ", xindices[i]);
+    }
+    printf("\n");
+
+    TEST_PRINTF("exact:                            %f", exact_dot);
+    TEST_PRINTF("serial:                           %f", serial_dot);
+    TEST_PRINTF("serial sum:                       %f", serial_add);
+    TEST_PRINTF("serial kahan:                     %f", serial_dot_kahan);
+    TEST_PRINTF("m256:                             %f", m256_dot);
+    TEST_PRINTF("m256 random indices:              %f", m256_dot_idx);
+    TEST_PRINTF("m256 relative error:              %f", m256_rel_err);
+
+    if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m256_rel_err);   
 }
 
 void test_m256_ddot(void)
@@ -269,6 +358,40 @@ void test_m256_ddot(void)
 
     if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
     TEST_ASSERT_LESS_THAN_DOUBLE(DBL_DELTA, m256_rel_err);
+}
+
+void test_m256_ddot_indexed(void)
+{
+    int seq_len = 20;
+
+    seq_darray(xd, seq_len, 1.0, 1.0);
+    set_darray(yd, seq_len, 1.0);
+    random_index_array(xindices, seq_len);
+
+    double exact_dot = (double)((seq_len * (seq_len + 1)) / 2);
+    double serial_dot = serial_ddot(xd, yd, seq_len);
+    double serial_add = serial_dsum(xd, seq_len);
+    double serial_dot_kahan = serial_ddot_kahan(xd, yd, seq_len);
+    double m256_dot = _mm256_ddot(xd, yd, seq_len);
+    double m256_dot_idx = _mm256_ddot_indexed(xd, xindices, yd, seq_len);
+    double m256_rel_err = (m256_dot_idx - exact_dot) / exact_dot;
+
+    printf("Randomized Indices: ");
+    for (int i = 0; i < seq_len; i++) {
+        printf("%d ", xindices[i]);
+    }
+    printf("\n");
+
+    TEST_PRINTF("exact:                            %lf", exact_dot);
+    TEST_PRINTF("serial:                           %lf", serial_dot);
+    TEST_PRINTF("serial sum:                       %lf", serial_add);
+    TEST_PRINTF("serial kahan:                     %lf", serial_dot_kahan);
+    TEST_PRINTF("m256:                             %lf", m256_dot);
+    TEST_PRINTF("m256 random indices:              %lf", m256_dot_idx);
+    TEST_PRINTF("m256 relative error:              %lf", m256_rel_err);
+
+    if (m256_rel_err < 0) m256_rel_err = -m256_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(DBL_DELTA, m256_rel_err);   
 }
 
 #ifdef SUPPORTS_AVX512
