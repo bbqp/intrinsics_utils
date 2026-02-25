@@ -2,6 +2,11 @@
 #define INTRINSICS_UTILS
 
 #include "cpu_flags.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <immintrin.h>
 
 //----------------------------------------------------------------------------
@@ -97,5 +102,9 @@ void _mm256_print_register_ps(__m256);
 void _mm256_store_register_epi32(__m256i, int *, int);
 void _mm256_store_register_ps(__m256i, int *, int);
 void _mm256_store_register_pd(__m256i, int *, int);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -3,6 +3,11 @@
 
 #include "cpu_flags.h"
 #include "constants.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <immintrin.h>
 #include <stdint.h>
 
@@ -32,6 +37,10 @@ __mmask16 _mm512_setmask_fromto_epi32(int, int);
 __mmask8 _mm512_setmask_fromto_epi64(int, int);
 __mmask16 _mm512_set_mask_epi32(int);
 __mmask8 _mm512_set_mask_epi64(int);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

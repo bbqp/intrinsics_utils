@@ -1,7 +1,15 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 //----------------------------------------------------------------------------
 // Macros for imm8 constants for permuting/shuffling.
