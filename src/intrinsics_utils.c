@@ -241,10 +241,8 @@ double _mm256_ddot_indexed(const double *x, const int *xindices, const double *y
 		sreg = _mm256_add_pd(sreg, preg);
 	}
 
-    mask128 = _mm_set_mask_epi32(INT32_PER_M128_REG - 1);
-
     for (i = cutoff; i < n; i += DOUBLE_PER_M256_REG) {
-        vindex = _mm_maskload_epi32(xindices, mask128);
+        vindex = _mm_loadu_epi32(xindices + i);
 		yreg = _mm256_loadu_pd(y + i);
 		xreg = _mm256_i32gather_pd(x, vindex, 8);
 
