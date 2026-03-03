@@ -54,7 +54,9 @@ void test_m256_ddot_indexed(void);
 
 #ifdef SUPPORTS_AVX512
 void test_m512_fdot(void);
+void test_m512_fdot_indexed(void);
 void test_m512_ddot(void);
+void test_m512_ddot_indexed(void);
 #endif
 
 int main(int argc, char *argv[])
@@ -80,7 +82,9 @@ int main(int argc, char *argv[])
 
 #ifdef SUPPORTS_AVX512
     RUN_TEST(test_m512_fdot);
+    RUN_TEST(test_m512_fdot_indexed);
     RUN_TEST(test_m512_ddot);
+    RUN_TEST(test_m512_ddot_indexed);
 #endif
 
     return UNITY_END();
@@ -420,6 +424,40 @@ void test_m512_fdot(void)
     TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m512_rel_err);
 }
 
+void test_m512_fdot_indexed(void)
+{
+    int seq_len = 20;
+
+    seq_farray(xf, seq_len, 1.0f, 1.0f);
+    set_farray(yf, seq_len, 1.0f);
+    random_index_array(xindices, seq_len);
+
+    float exact_dot = (float)((seq_len * (seq_len + 1)) / 2);
+    float serial_dot = serial_fdot(xf, yf, seq_len);
+    float serial_add = serial_fsum(xf, seq_len);
+    float serial_dot_kahan = serial_fdot_kahan(xf, yf, seq_len);
+    float m512_dot = _mm512_fdot(xf, yf, seq_len);
+    float m512_dot_idx = _mm512_fdot_indexed(xf, xindices, yf, seq_len);
+    float m512_rel_err = (m512_dot_idx - exact_dot) / exact_dot;
+
+    printf("Randomized Indices: ");
+    for (int i = 0; i < seq_len; i++) {
+        printf("%d ", xindices[i]);
+    }
+    printf("\n");
+
+    TEST_PRINTF("exact:                            %f", exact_dot);
+    TEST_PRINTF("serial:                           %f", serial_dot);
+    TEST_PRINTF("serial sum:                       %f", serial_add);
+    TEST_PRINTF("serial kahan:                     %f", serial_dot_kahan);
+    TEST_PRINTF("m512:                             %f", m512_dot);
+    TEST_PRINTF("m512 random indices:              %f", m512_dot_idx);
+    TEST_PRINTF("m512 relative error:              %f", m512_rel_err);
+
+    if (m512_rel_err < 0) m512_rel_err = -m512_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m512_rel_err);   
+}
+
 void test_m512_ddot(void)
 {
         set_darray(xd, m, 0.1);
@@ -443,5 +481,39 @@ void test_m512_ddot(void)
 
         if (m512_rel_err < 0) m512_rel_err = -m512_rel_err;
         TEST_ASSERT_LESS_THAN_DOUBLE(DBL_DELTA, m512_rel_err);
+}
+
+void test_m512_ddot_indexed(void)
+{
+    int seq_len = 20;
+
+    seq_darray(xd, seq_len, 1.0, 1.0);
+    set_darray(yd, seq_len, 1.0);
+    random_index_array(xindices, seq_len);
+
+    double exact_dot = (double)((seq_len * (seq_len + 1)) / 2);
+    double serial_dot = serial_ddot(xd, yd, seq_len);
+    double serial_add = serial_dsum(xd, seq_len);
+    double serial_dot_kahan = serial_ddot_kahan(xd, yd, seq_len);
+    double m512_dot = _mm512_ddot(xd, yd, seq_len);
+    double m512_dot_idx = _mm512_ddot_indexed(xd, xindices, yd, seq_len);
+    double m512_rel_err = (m512_dot_idx - exact_dot) / exact_dot;
+
+    printf("Randomized Indices: ");
+    for (int i = 0; i < seq_len; i++) {
+        printf("%d ", xindices[i]);
+    }
+    printf("\n");
+
+    TEST_PRINTF("exact:                            %f", exact_dot);
+    TEST_PRINTF("serial:                           %f", serial_dot);
+    TEST_PRINTF("serial sum:                       %f", serial_add);
+    TEST_PRINTF("serial kahan:                     %f", serial_dot_kahan);
+    TEST_PRINTF("m512:                             %f", m512_dot);
+    TEST_PRINTF("m512 random indices:              %f", m512_dot_idx);
+    TEST_PRINTF("m512 relative error:              %f", m512_rel_err);
+
+    if (m512_rel_err < 0) m512_rel_err = -m512_rel_err;
+    TEST_ASSERT_LESS_THAN_FLOAT(FLT_DELTA, m512_rel_err);   
 }
 #endif
