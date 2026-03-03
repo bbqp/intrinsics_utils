@@ -430,6 +430,78 @@ double _mm512_ddot(const double *x, const double *y, int n)
 
 	return _mm512_register_sum_pd(sreg);
 }
+
+double _mm512_ddot_indexed(const double *x, const int *xindices, const double *y, int n)
+{
+	__m512d xreg;
+	__m512d yreg;
+	__m512d preg;
+	__m512d sreg = _mm512_set1_pd(0);
+	__m256i vindex;
+	__mmask8 mask;
+	int i;
+	int cutoff = n % DOUBLE_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi32(cutoff - 1);
+		vindex = _mm256_maskz_loadu_epi32(mask, xindices);
+		yreg = _mm512_maskz_loadu_pd(mask, y);
+		xreg = _mm512_mask_i32gather_pd(sreg, mask, vindex, x, 8);
+
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += DOUBLE_PER_M512_REG) {
+		vindex = _mm256_loadu_epi32(xindices + i);
+		yreg = _mm512_loadu_pd(y + i);
+		xreg = _mm512_i32gather_pd(vindex, x, 8);
+
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	return _mm512_register_sum_pd(sreg);
+}
+
+double _mm512_ddot_indexed2(const double *x, const int *xindices, const double *y, const int *yindices, int n)
+{
+	__m512d xreg;
+	__m512d yreg;
+	__m512d preg;
+	__m512d sreg = _mm512_set1_pd(0);
+	__m256i xind;
+	__m256i yind;
+	__mmask8 mask;
+	int i;
+	int cutoff = n % DOUBLE_PER_M512_REG;
+
+	if (cutoff > 0) {
+		mask = _mm512_set_mask_epi32(cutoff - 1);
+
+		xind = _mm256_maskz_loadu_epi32(mask, xindices);
+		yind = _mm256_maskz_loadu_epi32(mask, yindices);
+
+		xreg = _mm512_mask_i32gather_pd(sreg, mask, xind, x, 8);
+		yreg = _mm512_mask_i32gather_pd(sreg, mask, yind, y, 8);
+
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	for (i = cutoff; i < n; i += DOUBLE_PER_M512_REG) {
+		xind = _mm256_loadu_epi32(xindices + i);
+		yind = _mm256_loadu_epi32(xindices + i);
+
+		xreg = _mm512_i32gather_pd(xind, x, 8);
+		yreg = _mm512_i32gather_pd(yind, y, 8);
+
+		preg = _mm512_mul_pd(xreg, yreg);
+		sreg = _mm512_add_pd(sreg, preg);
+	}
+
+	return _mm512_register_sum_pd(sreg);
+}
 #endif
 
 float _mm_register_sum_ps(__m128 vreg)
